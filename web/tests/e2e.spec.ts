@@ -22,22 +22,18 @@ test.describe('Stocklana Fantasy Full E2E Flow', () => {
     await page.goto('/?mockWallet=true');
     await expect(page.getByText('Stocklana Fantasy', { exact: false })).toBeVisible();
 
-    // Verify Stake button appears
-    const stakeBtn = page.getByText('Stake 5 USDC & Lock Draft', { exact: false });
-    await expect(stakeBtn).toBeVisible({ timeout: 10000 });
-    
-    await stakeBtn.click({ force: true });
-
-    // Verify successful stake toast notification
-    await expect(page.getByText('Successfully staked 5 USDC', { exact: false })).toBeVisible({ timeout: 10000 });
+    // Initially with 0 stocks, button tells user to draft at least 1 stock
+    await expect(page.getByRole('button', { name: /Draft at Least 1 Stock to Enter/i })).toBeVisible();
 
     // Draft AAPLx (clicking the +10 button for the first stock, which is AAPLx)
     await page.getByText('+10').first().click({ force: true });
 
-    // Lock Portfolio
-    const lockBtn = page.getByRole('button', { name: /LOCK PORTFOLIO ON-CHAIN/i });
-    await expect(lockBtn).toBeVisible();
-    await lockBtn.click();
+    // Verify Stake button is now enabled
+    const stakeBtn = page.getByRole('button', { name: /Stake 5 USDC & Lock Draft/i });
+    await expect(stakeBtn).toBeVisible({ timeout: 10000 });
+    await expect(stakeBtn).toBeEnabled();
+    
+    await stakeBtn.click();
 
     // Verify transaction receipt
     await expect(page.getByText('Portfolio Locked On-Chain!', { exact: false })).toBeVisible({ timeout: 10000 });

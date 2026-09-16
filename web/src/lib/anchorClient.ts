@@ -84,9 +84,10 @@ export async function buildStakeTransaction(
   }
 
   // 3. Stake instruction: discriminator + 8 bytes u64 LE
-  const stakeData = Buffer.alloc(16);
-  DISCRIMINATOR_STAKE.copy(stakeData, 0);
-  stakeData.writeBigUInt64LE(STAKE_RAW_AMOUNT, 8);
+  const stakeData = new Uint8Array(16);
+  stakeData.set(DISCRIMINATOR_STAKE, 0);
+  const view = new DataView(stakeData.buffer);
+  view.setBigUint64(8, STAKE_RAW_AMOUNT, true); // true = little-endian
 
   const stakeIx = new TransactionInstruction({
     programId: PROGRAM_ID,
@@ -97,7 +98,7 @@ export async function buildStakeTransaction(
       { pubkey: userPubkey, isSigner: true, isWritable: true },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ],
-    data: stakeData,
+    data: Buffer.from(stakeData),
   });
   tx.add(stakeIx);
 
@@ -174,9 +175,10 @@ export async function buildUnstakeTransaction(
 
   const tx = new Transaction();
 
-  const unstakeData = Buffer.alloc(16);
-  DISCRIMINATOR_UNSTAKE.copy(unstakeData, 0);
-  unstakeData.writeBigUInt64LE(STAKE_RAW_AMOUNT, 8);
+  const unstakeData = new Uint8Array(16);
+  unstakeData.set(DISCRIMINATOR_UNSTAKE, 0);
+  const unstakeView = new DataView(unstakeData.buffer);
+  unstakeView.setBigUint64(8, STAKE_RAW_AMOUNT, true);
 
   const unstakeIx = new TransactionInstruction({
     programId: PROGRAM_ID,
@@ -187,7 +189,7 @@ export async function buildUnstakeTransaction(
       { pubkey: userPubkey, isSigner: true, isWritable: true },
       { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
     ],
-    data: unstakeData,
+    data: Buffer.from(unstakeData),
   });
   tx.add(unstakeIx);
 

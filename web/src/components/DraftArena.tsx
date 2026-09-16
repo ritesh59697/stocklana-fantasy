@@ -13,6 +13,7 @@ const WalletMultiButton = dynamic(
 interface DraftArenaProps {
   connected: boolean;
   hasStaked: boolean;
+  isStaking?: boolean;
   onStake: () => void;
   onComplete: (portfolio: Record<string, number>, remainingCash: number) => void;
   onDraftChange?: (portfolio: Record<string, number>, remainingCash: number) => void;
@@ -36,6 +37,7 @@ const getStockIcon = (symbol: string) => {
 export default function DraftArena({
   connected,
   hasStaked,
+  isStaking,
   onStake,
   onComplete,
   onDraftChange,
@@ -258,25 +260,44 @@ export default function DraftArena({
           <div className="flex flex-col gap-3">
             <button
               onClick={() => {
+                if (totalSpent === 0 || isStaking) return;
                 onStake();
-                if (totalSpent > 0) {
-                  onComplete(allocation, remaining);
-                }
+                onComplete(allocation, remaining);
               }}
-              className="w-full py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-2"
+              disabled={totalSpent === 0 || isStaking}
+              className="w-full py-4 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed text-black font-medium rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-2"
             >
-              Stake 5 USDC & Lock Draft
+              {isStaking ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  Staking 5 USDC & Locking Draft...
+                </>
+              ) : totalSpent === 0 ? (
+                "Draft at Least 1 Stock to Enter"
+              ) : (
+                "Stake 5 USDC & Lock Draft"
+              )}
             </button>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-gray-500 font-mono px-1">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 font-mono px-1">
               <span>Deposits into Anchor Vault • Unstake anytime</span>
-              <a 
-                href="https://faucet.circle.com/" 
-                target="_blank" 
-                rel="noreferrer"
-                className="text-cyan-400/90 hover:text-cyan-300 underline transition-colors inline-flex items-center gap-1"
-              >
-                Circle USDC Faucet ↗
-              </a>
+              <div className="flex items-center gap-3">
+                <a 
+                  href="https://faucet.solana.com/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-gray-400 hover:text-white underline transition-colors inline-flex items-center gap-1"
+                >
+                  Devnet SOL Faucet ↗
+                </a>
+                <a 
+                  href="https://faucet.circle.com/" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-cyan-400/90 hover:text-cyan-300 underline transition-colors inline-flex items-center gap-1"
+                >
+                  Circle USDC Faucet ↗
+                </a>
+              </div>
             </div>
           </div>
         ) : (

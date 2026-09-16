@@ -238,6 +238,7 @@ export default function Home() {
             <DraftArena
               connected={connected}
               hasStaked={hasStaked}
+              isStaking={isStaking}
               onStake={handleStake}
               onComplete={handleDraftComplete}
               onDraftChange={(alloc, rem) => {
