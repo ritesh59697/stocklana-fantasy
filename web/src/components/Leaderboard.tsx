@@ -69,12 +69,16 @@ export default function Leaderboard({
           <div className="mb-2">
             <h2 className="text-2xl sm:text-3xl font-medium text-white tracking-tight">Live Leaderboard</h2>
           </div>
-          <p className="text-gray-400 text-sm font-light flex items-center gap-1.5">
-            <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            Sub-Second Pyth Price Feeds
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-gray-400 text-xs font-mono">
+            <span className="flex items-center gap-1 text-emerald-400">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Sub-Second Pyth Feeds
+            </span>
+            <span className="text-gray-700">•</span>
+            <span className="text-gray-400">Round #1 Settlement: Friday 20:00 UTC</span>
+          </div>
         </div>
 
         <div className="text-right">

@@ -46,6 +46,18 @@ export default function PortfolioLockedCard({
   const displayPnlPercent = (displayPnl / 100000) * 100;
   const isDisplayPositive = displayPnl >= 0;
 
+  const handleShareOnX = () => {
+    const draftedStr = Object.entries(portfolio)
+      .filter(([_, shares]) => shares > 0)
+      .map(([sym, shares]) => `${shares}x $${sym.replace('x','')}`)
+      .join(", ") || "Tokenized Equities";
+
+    const text = `Tracking my $100,000 zero-loss fantasy portfolio live on @StocklanaFantasy!\n\nPositions: ${draftedStr}\nCurrent Valuation: $${displayValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}\nPowered by @solana & @PythNetwork 📈⚡\n\nCan you beat my portfolio on the leaderboard?`;
+    const url = "https://stocklana.vercel.app";
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="flex-1 w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col relative overflow-hidden">
       {/* Header */}
@@ -140,15 +152,25 @@ export default function PortfolioLockedCard({
       <div className="pt-6 border-t border-white/[0.08] flex gap-3 flex-col sm:flex-row">
         <button
           onClick={onEditDraft}
-          className="flex-1 py-3.5 px-4 rounded-xl bg-transparent hover:bg-white/[0.05] text-white border border-white/[0.2] font-medium text-sm transition-colors cursor-pointer"
+          className="flex-1 py-3 px-4 rounded-xl bg-transparent hover:bg-white/[0.05] text-white border border-white/[0.2] font-medium text-xs sm:text-sm transition-colors cursor-pointer"
         >
           Re-Draft Allocation
         </button>
         <button
-          onClick={onUnstake}
-          className="flex-1 py-3.5 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-medium text-sm transition-colors cursor-pointer"
+          onClick={handleShareOnX}
+          className="py-3 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-white border border-white/[0.15] font-medium text-xs sm:text-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+          title="Share portfolio on X"
         >
-          Unstake 5 USDC (Zero Loss)
+          <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span>Share on X</span>
+        </button>
+        <button
+          onClick={onUnstake}
+          className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-medium text-xs sm:text-sm transition-colors cursor-pointer"
+        >
+          Unstake 5 USDC
         </button>
       </div>
     </div>

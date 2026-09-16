@@ -9,6 +9,7 @@ import PortfolioLockedCard from "@/components/PortfolioLockedCard";
 import ReceiptModal from "@/components/ReceiptModal";
 import HowItWorksModal from "@/components/HowItWorksModal";
 import StocklanaLogo from "@/components/StocklanaLogo";
+import RoundCountdownBadge from "@/components/RoundCountdown";
 import { 
   buildStakeTransaction, 
   buildUpdatePortfolioTransaction, 
@@ -208,6 +209,9 @@ export default function Home() {
               <span className="text-gray-600">•</span>
               <span>100% Capital Preserved</span>
             </div>
+
+            {/* Round Countdown Badge */}
+            <RoundCountdownBadge className="hidden xl:inline-flex" />
           </div>
 
           <div className="flex items-center gap-3">
