@@ -14,102 +14,146 @@ export default function HowItWorksModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-gray-900/95 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.15)] text-left overflow-hidden">
-        {/* Glow Header Accent */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-400 to-emerald-500" />
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div 
+        className="relative w-full max-w-2xl bg-[#0c0d12] border border-zinc-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 text-left overflow-hidden ring-1 ring-white/5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Subtle Ambient Radial Glow */}
+        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-44 bg-emerald-500/10 blur-3xl rounded-full" />
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer text-base"
+          className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 flex items-center justify-center transition-all cursor-pointer group"
           aria-label="Close"
         >
-          ✕
+          <svg className="w-4 h-4 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
         {/* Header */}
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-2">
-            ● Protocol Architecture & Rules
+        <div className="mb-7">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px] font-mono text-zinc-300 uppercase tracking-wider mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Protocol Architecture & Rules
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
             How Stocklana Fantasy Works
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            The zero-loss fantasy stock trading dApp on Solana.
+          <p className="text-sm text-zinc-400 mt-1.5">
+            A zero-loss fantasy stock trading protocol powered by Solana &amp; Pyth Network.
           </p>
         </div>
 
         {/* 3-Step Lifecycle Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
           {/* Step 1 */}
-          <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm mb-3">
-                1
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                  01
+                </span>
+                <span className="text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  Zero Loss
+                </span>
               </div>
-              <h3 className="font-bold text-sm text-white mb-1.5">Stake 100 USDC</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Deposit collateral into the Anchor vault. Funds generate DeFi yield in Kamino. 
-                <span className="text-emerald-400 font-semibold block mt-1">Zero principal risk.</span>
+              <h3 className="font-semibold text-sm text-white mb-1.5">Stake 100 USDC</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Deposit principal into the Anchor smart vault. Collateral accumulates yield in Kamino liquidity pools.
               </p>
             </div>
-            <span className="text-[10px] font-mono text-gray-500 mt-3 pt-2 border-t border-white/5">
-              Unstake Anytime
-            </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-zinc-300">
+                <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                Unstake anytime
+              </span>
+            </div>
           </div>
 
           {/* Step 2 */}
-          <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm mb-3">
-                2
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                  02
+                </span>
+                <span className="text-[10px] font-mono font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
+                  Token-2022
+                </span>
               </div>
-              <h3 className="font-bold text-sm text-white mb-1.5">Draft $100k xStocks</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Receive $100,000 in virtual capital to draft Token-2022 equities: AAPLx, NVDAx, TSLAx, SPYx.
+              <h3 className="font-semibold text-sm text-white mb-1.5">Draft xStocks</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Draft a virtual portfolio of equities (AAPLx, NVDAx, TSLAx) using $100k tournament capital.
               </p>
             </div>
-            <span className="text-[10px] font-mono text-cyan-400/80 mt-3 pt-2 border-t border-white/5">
-              SPL Token-2022
-            </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-zinc-300">
+                <span className="w-1 h-1 rounded-full bg-cyan-400" />
+                SPL Token-2022
+              </span>
+            </div>
           </div>
 
           {/* Step 3 */}
-          <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center font-bold text-sm mb-3">
-                3
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                  03
+                </span>
+                <span className="text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  Yield Pool
+                </span>
               </div>
-              <h3 className="font-bold text-sm text-white mb-1.5">Win the Yield</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Pyth Network oracles update portfolio valuations live. The top ranked traders win the collective DeFi yield pool.
+              <h3 className="font-semibold text-sm text-white mb-1.5">Win the Yield</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Pyth sub-second oracles update valuations. Top ranked traders win the weekly DeFi yield prize pool.
               </p>
             </div>
-            <span className="text-[10px] font-mono text-emerald-400 font-semibold mt-3 pt-2 border-t border-white/5">
-              $1,450.00 Prize Pool
-            </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 font-medium">
+                <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                $1,450.00 weekly pool
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Feature Highlights Banner */}
-        <div className="bg-black/50 border border-white/5 rounded-xl p-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-          <div>
-            <span className="text-gray-500 block text-[10px] uppercase">Principal Risk</span>
-            <span className="text-emerald-400 font-bold">0% (Zero Loss)</span>
+        {/* Feature Highlights Strip */}
+        <div className="bg-zinc-900/40 border border-zinc-800/70 rounded-xl p-3.5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
+          <div className="space-y-0.5">
+            <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Risk Profile</span>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Zero Loss (0%)
+            </div>
           </div>
-          <div>
-            <span className="text-gray-500 block text-[10px] uppercase">Oracle Speed</span>
-            <span className="text-cyan-400 font-bold">Sub-Second Pyth</span>
+          <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
+            <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Oracle Feed</span>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              Pyth Real-Time
+            </div>
           </div>
-          <div>
-            <span className="text-gray-500 block text-[10px] uppercase">Asset Standard</span>
-            <span className="text-white font-bold">Token-2022</span>
+          <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
+            <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Token Type</span>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+              SPL Token-2022
+            </div>
           </div>
-          <div>
-            <span className="text-gray-500 block text-[10px] uppercase">Network</span>
-            <span className="text-purple-400 font-bold">Solana Devnet</span>
+          <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
+            <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Deployment</span>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+              Solana Devnet
+            </div>
           </div>
         </div>
 
@@ -119,11 +163,15 @@ export default function HowItWorksModal({
             onClose();
             if (onStartDrafting) onStartDrafting();
           }}
-          className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:scale-[1.01] active:scale-[0.99] cursor-pointer text-sm"
+          className="w-full py-3.5 px-6 bg-white hover:bg-zinc-200 text-zinc-950 font-semibold rounded-xl transition-all shadow-md shadow-white/5 flex items-center justify-center gap-2 cursor-pointer text-sm active:scale-[0.99]"
         >
-          Got It, Enter Tournament →
+          <span>Enter Tournament</span>
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
         </button>
       </div>
     </div>
   );
 }
+
