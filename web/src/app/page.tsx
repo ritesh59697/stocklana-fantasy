@@ -47,9 +47,22 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isStaking, setIsStaking] = useState(false);
 
-  const handleStake = async () => {
+  const handleStake = async (alloc?: Record<string, number>, remainingCash?: number) => {
+    const draftedStocks = alloc 
+      ? Object.entries(alloc).filter(([_, shares]) => shares > 0).map(([sym]) => sym)
+      : [];
+
     if (mockConnected || !wallet.publicKey) {
       setHasStaked(true);
+      if (alloc) {
+        setPortfolio(alloc);
+        setUserCash(remainingCash ?? 100000);
+        setIsLocked(true);
+        const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+        const randomSig = "5" + Array.from({ length: 86 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+        setTxHash(randomSig);
+        setShowReceipt(true);
+      }
       setToastMessage(`Successfully staked ${STAKE_AMOUNT_USDC} USDC into Kamino DeFi yield pool! $100,000 Fantasy Dollars credited.`);
       setTimeout(() => setToastMessage(null), 5000);
       return;
@@ -57,14 +70,21 @@ export default function Home() {
 
     try {
       setIsStaking(true);
-      setToastMessage("Preparing on-chain staking transaction on Solana Devnet...");
-      const tx = await buildStakeTransaction(connection, wallet);
+      setToastMessage("Preparing atomic stake & draft transaction on Solana Devnet...");
+      const tx = await buildStakeTransaction(connection, wallet, draftedStocks);
       const signature = await wallet.sendTransaction(tx, connection);
       setToastMessage(`Transaction submitted! Confirming on Devnet: ${signature.slice(0, 8)}...`);
       await connection.confirmTransaction(signature, "confirmed");
       
       setHasStaked(true);
-      setToastMessage(`Successfully staked ${STAKE_AMOUNT_USDC} USDC on-chain! Tx: ${signature.slice(0, 8)}...`);
+      if (alloc) {
+        setPortfolio(alloc);
+        setUserCash(remainingCash ?? 100000);
+        setIsLocked(true);
+        setTxHash(signature);
+        setShowReceipt(true);
+      }
+      setToastMessage(`Successfully staked ${STAKE_AMOUNT_USDC} USDC & locked draft on-chain! Tx: ${signature.slice(0, 8)}...`);
       setTimeout(() => setToastMessage(null), 6000);
     } catch (err: any) {
       console.error("Stake error:", err);

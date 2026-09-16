@@ -14,7 +14,7 @@ interface DraftArenaProps {
   connected: boolean;
   hasStaked: boolean;
   isStaking?: boolean;
-  onStake: () => void;
+  onStake: (portfolio: Record<string, number>, remainingCash: number) => void;
   onComplete: (portfolio: Record<string, number>, remainingCash: number) => void;
   onDraftChange?: (portfolio: Record<string, number>, remainingCash: number) => void;
 }
@@ -261,8 +261,7 @@ export default function DraftArena({
             <button
               onClick={() => {
                 if (totalSpent === 0 || isStaking) return;
-                onStake();
-                onComplete(allocation, remaining);
+                onStake(allocation, remaining);
               }}
               disabled={totalSpent === 0 || isStaking}
               className="w-full py-4 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed text-black font-medium rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-2"

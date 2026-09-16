@@ -46,7 +46,8 @@ export function getVaultTokenPda(): PublicKey {
  */
 export async function buildStakeTransaction(
   connection: Connection,
-  wallet: any
+  wallet: any,
+  stocks?: string[]
 ): Promise<Transaction> {
   const userPubkey = wallet.publicKey;
   const userStatePda = getUserStatePda(userPubkey);
@@ -101,6 +102,37 @@ export async function buildStakeTransaction(
     data: Buffer.from(stakeData),
   });
   tx.add(stakeIx);
+
+  // 4. If drafted stocks are provided, atomically update portfolio in the same transaction
+  if (stocks && stocks.length > 0) {
+    const safeStocks = stocks.slice(0, 5);
+    let payloadSize = 8 + 4;
+    for (const s of safeStocks) {
+      payloadSize += 4 + Buffer.byteLength(s, "utf8");
+    }
+
+    const data = Buffer.alloc(payloadSize);
+    DISCRIMINATOR_UPDATE_PORTFOLIO.copy(data, 0);
+    data.writeUInt32LE(safeStocks.length, 8);
+    let offset = 12;
+    for (const s of safeStocks) {
+      const sBytes = Buffer.from(s, "utf8");
+      data.writeUInt32LE(sBytes.length, offset);
+      offset += 4;
+      sBytes.copy(data, offset);
+      offset += sBytes.length;
+    }
+
+    const updateIx = new TransactionInstruction({
+      programId: PROGRAM_ID,
+      keys: [
+        { pubkey: userStatePda, isSigner: false, isWritable: true },
+        { pubkey: userPubkey, isSigner: true, isWritable: false },
+      ],
+      data,
+    });
+    tx.add(updateIx);
+  }
 
   tx.feePayer = userPubkey;
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
