@@ -19,12 +19,9 @@ export default function HowItWorksModal({
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-2xl bg-[#0c0d12] border border-zinc-800/90 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 text-left overflow-hidden ring-1 ring-white/5"
+        className="relative w-full max-w-2xl bg-[#0b0c10] border border-zinc-800 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black/80 text-left overflow-hidden ring-1 ring-white/5"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Subtle Ambient Radial Glow */}
-        <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-44 bg-emerald-500/10 blur-3xl rounded-full" />
-
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -38,9 +35,8 @@ export default function HowItWorksModal({
 
         {/* Header */}
         <div className="mb-7">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px] font-mono text-zinc-300 uppercase tracking-wider mb-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Protocol Architecture & Rules
+          <div className="text-[11px] font-mono tracking-widest text-zinc-400 uppercase mb-2">
+            Protocol Architecture &amp; Rules
           </div>
           <h2 className="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
             How Stocklana Fantasy Works
@@ -56,10 +52,10 @@ export default function HowItWorksModal({
           <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                <span className="font-mono text-xs text-zinc-500 font-semibold">
                   01
                 </span>
-                <span className="text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
                   Zero Loss
                 </span>
               </div>
@@ -68,11 +64,8 @@ export default function HowItWorksModal({
                 Deposit principal into the Anchor smart vault. Collateral accumulates yield in Kamino liquidity pools.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-zinc-800/80">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-zinc-300">
-                <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                Unstake anytime
-              </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 text-[11px] font-mono text-zinc-400">
+              Unstake anytime
             </div>
           </div>
 
@@ -80,10 +73,10 @@ export default function HowItWorksModal({
           <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                <span className="font-mono text-xs text-zinc-500 font-semibold">
                   02
                 </span>
-                <span className="text-[10px] font-mono font-medium text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
                   Token-2022
                 </span>
               </div>
@@ -92,11 +85,8 @@ export default function HowItWorksModal({
                 Draft a virtual portfolio of equities (AAPLx, NVDAx, TSLAx) using $100k tournament capital.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-zinc-800/80">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-zinc-300">
-                <span className="w-1 h-1 rounded-full bg-cyan-400" />
-                SPL Token-2022
-              </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 text-[11px] font-mono text-zinc-400">
+              SPL Token-2022
             </div>
           </div>
 
@@ -104,10 +94,10 @@ export default function HowItWorksModal({
           <div className="bg-zinc-900/50 border border-zinc-800/80 hover:border-zinc-700 transition-all rounded-xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="w-7 h-7 rounded-lg bg-zinc-800/90 border border-zinc-700/60 text-zinc-200 flex items-center justify-center font-mono text-xs font-semibold">
+                <span className="font-mono text-xs text-zinc-500 font-semibold">
                   03
                 </span>
-                <span className="text-[10px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-2 py-0.5 rounded">
                   Yield Pool
                 </span>
               </div>
@@ -116,11 +106,8 @@ export default function HowItWorksModal({
                 Pyth sub-second oracles update valuations. Top ranked traders win the weekly DeFi yield prize pool.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-zinc-800/80">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 font-medium">
-                <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                $1,450.00 weekly pool
-              </span>
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 text-[11px] font-mono text-zinc-300 font-medium">
+              $1,450.00 weekly pool
             </div>
           </div>
         </div>
@@ -129,29 +116,25 @@ export default function HowItWorksModal({
         <div className="bg-zinc-900/40 border border-zinc-800/70 rounded-xl p-3.5 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono">
           <div className="space-y-0.5">
             <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Risk Profile</span>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <div className="text-xs text-zinc-200 font-medium">
               Zero Loss (0%)
             </div>
           </div>
           <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
             <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Oracle Feed</span>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+            <div className="text-xs text-zinc-200 font-medium">
               Pyth Real-Time
             </div>
           </div>
           <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
             <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Token Type</span>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+            <div className="text-xs text-zinc-200 font-medium">
               SPL Token-2022
             </div>
           </div>
           <div className="space-y-0.5 sm:border-l sm:border-zinc-800/60 sm:pl-3">
             <span className="text-zinc-500 block text-[10px] uppercase tracking-wider">Deployment</span>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+            <div className="text-xs text-zinc-200 font-medium">
               Solana Devnet
             </div>
           </div>
@@ -174,4 +157,5 @@ export default function HowItWorksModal({
     </div>
   );
 }
+
 
