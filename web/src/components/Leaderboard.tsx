@@ -66,11 +66,7 @@ export default function Leaderboard({
     <div className="flex-1 w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col relative overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
+          <div className="mb-2">
             <h2 className="text-2xl sm:text-3xl font-medium text-white tracking-tight">Live Leaderboard</h2>
           </div>
           <p className="text-gray-400 text-sm font-light flex items-center gap-1.5">

@@ -8,6 +8,7 @@ import Leaderboard from "@/components/Leaderboard";
 import PortfolioLockedCard from "@/components/PortfolioLockedCard";
 import ReceiptModal from "@/components/ReceiptModal";
 import HowItWorksModal from "@/components/HowItWorksModal";
+import StocklanaLogo from "@/components/StocklanaLogo";
 import { 
   buildStakeTransaction, 
   buildUpdatePortfolioTransaction, 
@@ -188,10 +189,8 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 max-w-[1400px] mx-auto w-full">
           <div className="flex items-center gap-4 sm:gap-6">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center font-bold text-black text-xs">
-                SF
-              </div>
+            <div className="flex items-center gap-3">
+              <StocklanaLogo size={32} />
               <h1 className="text-lg font-medium tracking-tight text-white">
                 Stocklana Fantasy
               </h1>
@@ -199,10 +198,7 @@ export default function Home() {
 
             {/* Live Pool Pill */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
               <span className="text-xs font-medium text-white tracking-wide">Prize Pool: $1,450.00 USDC</span>
             </div>
 
@@ -317,12 +313,12 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <span>Anchor Program:</span>
             <a
-              href="https://explorer.solana.com/address/9nZZc7LAuvrtSv9dNjMrYwyFsuW7aJKnhydPQRi6ijP1?cluster=devnet"
+              href="https://explorer.solana.com/address/hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway?cluster=devnet"
               target="_blank"
               rel="noreferrer"
               className="text-white hover:text-gray-300 transition-colors flex items-center gap-1"
             >
-              <span>9nZZ...ijP1</span>
+              <span>hGen...way</span>
               <span>↗</span>
             </a>
           </div>

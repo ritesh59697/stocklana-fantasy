@@ -133,7 +133,7 @@ export default function PortfolioLockedCard({
           onClick={onUnstake}
           className="flex-1 py-3.5 px-4 rounded-xl bg-white hover:bg-gray-100 text-black font-medium text-sm transition-colors cursor-pointer"
         >
-          Unstake 100 USDC (Zero Loss)
+          Unstake 5 USDC (Zero Loss)
         </button>
       </div>
     </div>
