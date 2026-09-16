@@ -265,11 +265,19 @@ export default function DraftArena({
               }}
               className="w-full py-4 bg-white hover:bg-gray-100 text-black font-medium rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-2"
             >
-              Stake 100 USDC & Lock Draft
+              Stake 5 USDC & Lock Draft
             </button>
-            <p className="text-center text-xs text-gray-500">
-              Deposits into Kamino DeFi Vault to generate prize yield. Unstake 100% anytime.
-            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-gray-500 font-mono px-1">
+              <span>Deposits into Anchor Vault • Unstake anytime</span>
+              <a 
+                href="https://faucet.circle.com/" 
+                target="_blank" 
+                rel="noreferrer"
+                className="text-cyan-400/90 hover:text-cyan-300 underline transition-colors inline-flex items-center gap-1"
+              >
+                Circle USDC Faucet ↗
+              </a>
+            </div>
           </div>
         ) : (
           <button

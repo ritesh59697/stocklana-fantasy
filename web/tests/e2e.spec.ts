@@ -23,13 +23,13 @@ test.describe('Stocklana Fantasy Full E2E Flow', () => {
     await expect(page.getByText('Stocklana Fantasy', { exact: false })).toBeVisible();
 
     // Verify Stake button appears
-    const stakeBtn = page.getByText('Stake 100 USDC & Lock Draft', { exact: false });
+    const stakeBtn = page.getByText('Stake 5 USDC & Lock Draft', { exact: false });
     await expect(stakeBtn).toBeVisible({ timeout: 10000 });
     
     await stakeBtn.click({ force: true });
 
     // Verify successful stake toast notification
-    await expect(page.getByText('Successfully staked 100 USDC', { exact: false })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Successfully staked 5 USDC', { exact: false })).toBeVisible({ timeout: 10000 });
 
     // Draft AAPLx (clicking the +10 button for the first stock, which is AAPLx)
     await page.getByText('+10').first().click({ force: true });

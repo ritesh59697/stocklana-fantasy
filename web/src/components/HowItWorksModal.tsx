@@ -59,7 +59,7 @@ export default function HowItWorksModal({
                   Zero Loss
                 </span>
               </div>
-              <h3 className="font-semibold text-sm text-white mb-1.5">Stake 100 USDC</h3>
+              <h3 className="font-semibold text-sm text-white mb-1.5">Stake 5 USDC</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
                 Deposit principal into the Anchor smart vault. Collateral accumulates yield in Kamino liquidity pools.
               </p>

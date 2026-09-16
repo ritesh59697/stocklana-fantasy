@@ -42,7 +42,7 @@ export default function ReceiptModal({
         <div className="bg-zinc-900/40 border border-zinc-800/70 rounded-xl p-4 text-left font-mono text-xs space-y-2.5 mb-6">
           <div className="flex justify-between items-center text-zinc-400">
             <span className="text-[11px]">Collateral Staked</span>
-            <span className="text-zinc-200 font-medium">100.00 USDC (Zero Loss)</span>
+            <span className="text-zinc-200 font-medium">5.00 USDC (Zero Loss)</span>
           </div>
           <div className="flex justify-between items-center text-zinc-400">
             <span className="text-[11px]">Virtual Allocation</span>

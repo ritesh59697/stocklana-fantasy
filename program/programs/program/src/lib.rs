@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 
-declare_id!("9nZZc7LAuvrtSv9dNjMrYwyFsuW7aJKnhydPQRi6ijP1");
+declare_id!("hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway");
 
 #[program]
 pub mod stocklana_fantasy {
@@ -65,6 +65,29 @@ pub mod stocklana_fantasy {
         user_state.portfolio = new_portfolio;
         Ok(())
     }
+
+    pub fn initialize_vault(_ctx: Context<InitializeVault>) -> Result<()> {
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct InitializeVault<'info> {
+    #[account(
+        init,
+        payer = authority,
+        seeds = [b"vault"],
+        bump,
+        token::mint = usdc_mint,
+        token::authority = vault_token_account,
+    )]
+    pub vault_token_account: Account<'info, TokenAccount>,
+    pub usdc_mint: Account<'info, Mint>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
