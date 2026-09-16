@@ -69,12 +69,14 @@ export default function Home() {
     } catch (err: any) {
       console.error("Stake error:", err);
       const msg = err?.message || String(err);
-      if (msg.includes("0x1") || msg.includes("insufficient funds") || msg.includes("AccountNotFound")) {
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else if (msg.includes("0x1") || msg.includes("insufficient funds") || msg.includes("AccountNotFound")) {
         setToastMessage("Need Devnet USDC! Grab 10 free USDC at faucet.circle.com (select Solana Devnet).");
       } else {
-        setToastMessage(`Tx notice: ${msg.slice(0, 80)}`);
+        setToastMessage(`Transaction failed: ${msg.slice(0, 80)}`);
       }
-      setTimeout(() => setToastMessage(null), 7000);
+      setTimeout(() => setToastMessage(null), 6000);
     } finally {
       setIsStaking(false);
     }
@@ -97,9 +99,10 @@ export default function Home() {
     }
 
     try {
-      setToastMessage("Recording drafted portfolio on Solana Devnet...");
+      setToastMessage("Signing and broadcasting portfolio to Solana Devnet...");
       const tx = await buildUpdatePortfolioTransaction(connection, wallet, draftedStocks);
       const signature = await wallet.sendTransaction(tx, connection);
+      setToastMessage(`Transaction submitted! Confirming on Devnet: ${signature.slice(0, 8)}...`);
       await connection.confirmTransaction(signature, "confirmed");
       
       setPortfolio(alloc);
@@ -110,14 +113,13 @@ export default function Home() {
       setToastMessage(null);
     } catch (err: any) {
       console.error("Draft update error:", err);
-      // Fallback display so user state stays interactive
-      setPortfolio(alloc);
-      setUserCash(remainingCash);
-      setIsLocked(true);
-      const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-      const fallbackSig = "5" + Array.from({ length: 86 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-      setTxHash(fallbackSig);
-      setShowReceipt(true);
+      const msg = err?.message || String(err);
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else {
+        setToastMessage(`Transaction failed: ${msg.slice(0, 90)}`);
+      }
+      setTimeout(() => setToastMessage(null), 6000);
     }
   };
 
@@ -150,7 +152,12 @@ export default function Home() {
       setTimeout(() => setToastMessage(null), 6000);
     } catch (err: any) {
       console.error("Unstake error:", err);
-      setToastMessage(`Unstake notice: ${err?.message?.slice(0, 80) || "Failed"}`);
+      const msg = err?.message || String(err);
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else {
+        setToastMessage(`Unstake notice: ${msg.slice(0, 90)}`);
+      }
       setTimeout(() => setToastMessage(null), 6000);
     }
   };
