@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { usePythPrices } from "@/hooks/usePythPrices";
 import { Apple, Nvidia, Tesla } from "@thesvg/react";
+import PortfolioChart from "./PortfolioChart";
 
 interface PortfolioLockedCardProps {
   portfolio: Record<string, number>;
@@ -32,20 +34,22 @@ export default function PortfolioLockedCard({
   onUnstake,
 }: PortfolioLockedCardProps) {
   const { prices, loading } = usePythPrices();
+  const [scrubPoint, setScrubPoint] = useState<{ timestamp: number; value: number } | null>(null);
 
   const totalPositionsValue = Object.entries(portfolio).reduce((acc, [sym, shares]) => {
     return acc + (shares * (prices[sym] || 0));
   }, 0);
 
   const totalValue = totalPositionsValue + cash;
-  const pnl = totalValue - 100000;
-  const pnlPercent = (pnl / 100000) * 100;
-  const isPositive = pnl >= 0;
+  const displayValue = scrubPoint ? scrubPoint.value : totalValue;
+  const displayPnl = displayValue - 100000;
+  const displayPnlPercent = (displayPnl / 100000) * 100;
+  const isDisplayPositive = displayPnl >= 0;
 
   return (
     <div className="flex-1 w-full bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-medium bg-white/[0.05] text-white border border-white/[0.1] uppercase tracking-wider">
@@ -61,17 +65,28 @@ export default function PortfolioLockedCard({
         </div>
 
         <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
-          <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-1.5">
-            Total Valuation
+          <p className="text-[11px] text-gray-500 uppercase tracking-widest font-medium mb-1.5 flex items-center gap-1.5">
+            {scrubPoint ? (
+              <span className="text-zinc-300">Scrubbing History</span>
+            ) : (
+              <span>Total Valuation</span>
+            )}
           </p>
-          <p className="text-2xl sm:text-3xl font-mono text-white font-medium">
-            ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <p className="text-2xl sm:text-3xl font-mono text-white font-medium transition-colors">
+            ${displayValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
-          <p className={`text-xs font-mono font-medium mt-1 ${isPositive ? "text-emerald-400" : "text-gray-400"}`}>
-            {isPositive ? "+" : ""}${pnl.toFixed(2)} ({isPositive ? "+" : ""}{pnlPercent.toFixed(2)}%)
+          <p className={`text-xs font-mono font-medium mt-1 ${isDisplayPositive ? "text-emerald-400" : "text-rose-400"}`}>
+            {isDisplayPositive ? "+" : ""}${displayPnl.toFixed(2)} ({isDisplayPositive ? "+" : ""}{displayPnlPercent.toFixed(2)}%)
           </p>
         </div>
       </div>
+
+      {/* Real-Time Interactive Chart */}
+      <PortfolioChart
+        currentValue={totalValue}
+        baseValue={100000}
+        onHoverPoint={(pt) => setScrubPoint(pt)}
+      />
 
       {/* Positions List */}
       <div className="space-y-2 flex-1 mb-8">
