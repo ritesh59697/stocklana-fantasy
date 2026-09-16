@@ -8,6 +8,7 @@ import Leaderboard from "@/components/Leaderboard";
 import PortfolioLockedCard from "@/components/PortfolioLockedCard";
 import ReceiptModal from "@/components/ReceiptModal";
 import HowItWorksModal from "@/components/HowItWorksModal";
+import KaminoTelemetryModal from "@/components/KaminoTelemetryModal";
 import StocklanaLogo from "@/components/StocklanaLogo";
 import RoundCountdownBadge from "@/components/RoundCountdown";
 import { 
@@ -45,6 +46,7 @@ export default function Home() {
   const [draftCash, setDraftCash] = useState(100000);
   const [showReceipt, setShowReceipt] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showKaminoTelemetry, setShowKaminoTelemetry] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isStaking, setIsStaking] = useState(false);
@@ -197,11 +199,16 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Live Pool Pill */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08]">
+            {/* Live Pool Pill with Kamino Telemetry Trigger */}
+            <button
+              onClick={() => setShowKaminoTelemetry(true)}
+              className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] transition-colors cursor-pointer group"
+              title="Click to view Kamino Yield Telemetry"
+            >
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
               <span className="text-xs font-medium text-white tracking-wide">Prize Pool: $1,450.00 USDC</span>
-            </div>
+              <span className="text-[10px] font-mono text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
+            </button>
 
             {/* Zero Loss Badge */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px] font-mono text-gray-400">
@@ -265,6 +272,7 @@ export default function Home() {
                 setDraftPortfolio(alloc);
                 setDraftCash(rem);
               }}
+              onOpenKaminoTelemetry={() => setShowKaminoTelemetry(true)}
             />
           )}
         </div>
@@ -297,6 +305,12 @@ export default function Home() {
             handleStake();
           }
         }}
+      />
+
+      {/* Kamino Yield Vault Telemetry Modal */}
+      <KaminoTelemetryModal
+        isOpen={showKaminoTelemetry}
+        onClose={() => setShowKaminoTelemetry(false)}
       />
 
       {/* Protocol Architecture & Judge Telemetry Footer */}

@@ -10,6 +10,8 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
+import KaminoYieldCard from "./KaminoYieldCard";
+
 interface DraftArenaProps {
   connected: boolean;
   hasStaked: boolean;
@@ -17,6 +19,7 @@ interface DraftArenaProps {
   onStake: (portfolio: Record<string, number>, remainingCash: number) => void;
   onComplete: (portfolio: Record<string, number>, remainingCash: number) => void;
   onDraftChange?: (portfolio: Record<string, number>, remainingCash: number) => void;
+  onOpenKaminoTelemetry?: () => void;
 }
 
 const getStockIcon = (symbol: string) => {
@@ -41,6 +44,7 @@ export default function DraftArena({
   onStake,
   onComplete,
   onDraftChange,
+  onOpenKaminoTelemetry,
 }: DraftArenaProps) {
   const { prices, loading } = usePythPrices();
   const [allocation, setAllocation] = useState<Record<string, number>>({
@@ -120,25 +124,16 @@ export default function DraftArena({
 
       {/* Preview Pill or Staking Guarantee Banner */}
       {!connected ? (
-        <div className="mb-6 flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-300">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span className="font-medium text-white">Interactive Sandbox Mode</span>
-            <span className="text-gray-500 hidden md:inline font-light">• Draft your allocation before connecting</span>
+        <div className="mb-6 flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs font-mono text-gray-300">
+          <div className="flex items-center gap-2.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span className="font-medium text-white">Interactive Sandbox</span>
+            <span className="text-gray-500 hidden md:inline font-light">• Draft allocation before connecting</span>
           </div>
-          <span className="font-mono text-white text-xs">$1,450 Prize Pool</span>
+          <span className="text-white text-xs">$1,450 Prize Pool</span>
         </div>
       ) : !hasStaked ? (
-        <div className="mb-6 flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-300">
-          <div className="flex items-center gap-3">
-            <span className="text-white font-medium">Zero-Loss Protocol</span>
-            <span className="text-gray-500 hidden md:inline font-light">• 100 USDC deposit yields Kamino rewards</span>
-          </div>
-          <span className="font-mono text-white text-xs">100% Principal Safe</span>
-        </div>
+        <KaminoYieldCard className="mb-6" onOpenTelemetry={onOpenKaminoTelemetry} />
       ) : null}
 
       {/* Budget Progress Bar & Quick Presets */}
