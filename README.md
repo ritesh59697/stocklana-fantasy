@@ -117,6 +117,23 @@ The smart contract is live and fully verified on **Solana Devnet**:
 
 ---
 
+## 🛠️ Implementation Status (Hackathon Submission)
+
+While the full vision includes on-chain yield generation and on-chain oracle settlement, the current MVP implementation focuses on the core game integrity and zero-loss mechanics. 
+
+**Fully Implemented (On-Chain / Anchor Program):**
+- **Strict 5 USDC Staking:** The contract cryptographically enforces that users can only enter by depositing exactly 5 USDC.
+- **Atomic Portfolio Storage:** Users can draft and store up to 5 tokenized equities directly in their on-chain PDA.
+- **Portfolio Locking:** A dedicated `lock_portfolio` instruction ensures the user cannot edit their draft after the tournament begins. The UI correctly syncs this state from the blockchain.
+- **Zero-Loss Unstaking:** Users can withdraw their exact 5 USDC principal at any time, proving the zero-loss mechanic.
+
+**Demo / Simulated (Frontend):**
+- **Kamino DeFi Yield:** The deposit into Kamino yield pools is simulated in the UI. Currently, the staked USDC sits in the protocol's vault PDA.
+- **Pyth Oracle Settlement:** The frontend uses live Pyth Hermes price feeds to calculate portfolio value in real-time. However, the on-chain contract does not yet ingest Pyth price accounts to calculate the final leaderboard winners. 
+- **Prize Distribution:** Yield payout logic and tournament phase transitions (Registration -> Active -> Completed) are currently driven by a mocked admin state in the UI.
+
+---
+
 ## 🎥 2.5-Minute Demo Video Script
 
 | Timestamp | Screen / Flow | Voiceover Narrative |

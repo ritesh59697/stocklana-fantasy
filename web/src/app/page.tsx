@@ -13,8 +13,9 @@ import StocklanaLogo from "@/components/StocklanaLogo";
 import RoundCountdownBadge from "@/components/RoundCountdown";
 import { 
   buildStakeTransaction, 
-  buildUpdatePortfolioTransaction, 
+  buildUpdateAndLockPortfolioTransaction, 
   buildUnstakeTransaction, 
+  fetchUserState,
   STAKE_AMOUNT_USDC 
 } from "@/lib/anchorClient";
 
@@ -50,6 +51,28 @@ export default function Home() {
   const [txHash, setTxHash] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isStaking, setIsStaking] = useState(false);
+
+  useEffect(() => {
+    async function loadUserState() {
+      if (walletConnected && wallet.publicKey && connection) {
+        const state = await fetchUserState(connection, wallet);
+        if (state) {
+          setHasStaked(state.hasStaked);
+          setIsLocked(state.isLocked);
+          if (state.portfolio && state.portfolio.length > 0) {
+            // Restore a simple 1-share portfolio to satisfy the UI check
+            const restoredPort: Record<string, number> = {};
+            state.portfolio.forEach(sym => {
+              restoredPort[sym] = 1;
+            });
+            setPortfolio(restoredPort);
+            setUserCash(0);
+          }
+        }
+      }
+    }
+    loadUserState();
+  }, [walletConnected, wallet.publicKey, connection]);
 
   const handleStake = async (alloc?: Record<string, number>, remainingCash?: number) => {
     const draftedStocks = alloc 
@@ -124,7 +147,7 @@ export default function Home() {
 
     try {
       setToastMessage("Signing and broadcasting portfolio to Solana Devnet...");
-      const tx = await buildUpdatePortfolioTransaction(connection, wallet, draftedStocks);
+      const tx = await buildUpdateAndLockPortfolioTransaction(connection, wallet, draftedStocks);
       const signature = await wallet.sendTransaction(tx, connection);
       setToastMessage(`Transaction submitted! Confirming on Devnet: ${signature.slice(0, 8)}...`);
       await connection.confirmTransaction(signature, "confirmed");

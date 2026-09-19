@@ -8,6 +8,54 @@
   },
   "instructions": [
     {
+      "name": "initialize_tournament",
+      "discriminator": [
+        75,
+        218,
+        86,
+        80,
+        49,
+        127,
+        155,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "tournament",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initialize_user",
       "discriminator": [
         111,
@@ -114,6 +162,53 @@
       "args": []
     },
     {
+      "name": "lock_portfolio",
+      "discriminator": [
+        230,
+        238,
+        24,
+        79,
+        249,
+        212,
+        25,
+        63
+      ],
+      "accounts": [
+        {
+          "name": "user_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "stake",
       "discriminator": [
         206,
@@ -126,6 +221,29 @@
         108
       ],
       "accounts": [
+        {
+          "name": "tournament",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
         {
           "name": "user_state",
           "writable": true,
@@ -206,6 +324,29 @@
       ],
       "accounts": [
         {
+          "name": "tournament",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "user_state",
           "writable": true,
           "pda": {
@@ -264,12 +405,7 @@
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "update_portfolio",
@@ -328,6 +464,19 @@
   ],
   "accounts": [
     {
+      "name": "TournamentState",
+      "discriminator": [
+        224,
+        228,
+        115,
+        17,
+        129,
+        1,
+        7,
+        205
+      ]
+    },
+    {
       "name": "UserState",
       "discriminator": [
         72,
@@ -356,9 +505,93 @@
       "code": 6002,
       "name": "PortfolioTooLarge",
       "msg": "Portfolio can have maximum 5 assets."
+    },
+    {
+      "code": 6003,
+      "name": "InvalidStakeAmount",
+      "msg": "Stake amount must be exactly 5 USDC."
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyStaked",
+      "msg": "User has already staked."
+    },
+    {
+      "code": 6005,
+      "name": "RegistrationClosed",
+      "msg": "Tournament registration is closed."
+    },
+    {
+      "code": 6006,
+      "name": "PortfolioLocked",
+      "msg": "Portfolio is already locked."
+    },
+    {
+      "code": 6007,
+      "name": "InvalidAsset",
+      "msg": "Invalid asset provided."
+    },
+    {
+      "code": 6008,
+      "name": "DuplicateAsset",
+      "msg": "Duplicate assets are not allowed."
+    },
+    {
+      "code": 6009,
+      "name": "EmptyPortfolio",
+      "msg": "Portfolio cannot be empty when locking."
+    },
+    {
+      "code": 6010,
+      "name": "MathOverflow",
+      "msg": "Mathematical overflow occurred."
     }
   ],
   "types": [
+    {
+      "name": "GamePhase",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Registration"
+          },
+          {
+            "name": "Locked"
+          },
+          {
+            "name": "Finished"
+          },
+          {
+            "name": "Settled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TournamentState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "phase",
+            "type": {
+              "defined": {
+                "name": "GamePhase"
+              }
+            }
+          },
+          {
+            "name": "total_staked",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "UserState",
       "type": {
@@ -377,6 +610,10 @@
             "type": {
               "vec": "string"
             }
+          },
+          {
+            "name": "is_locked",
+            "type": "bool"
           },
           {
             "name": "bump",
