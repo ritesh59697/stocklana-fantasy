@@ -128,9 +128,9 @@ While the full vision includes on-chain yield generation and on-chain oracle set
 - **Zero-Loss Unstaking:** Users can withdraw their exact 5 USDC principal at any time, proving the zero-loss mechanic.
 
 **Demo / Simulated (Frontend):**
-- **Kamino DeFi Yield:** The deposit into Kamino yield pools is simulated in the UI. Currently, the staked USDC sits in the protocol's vault PDA.
-- **Pyth Oracle Settlement:** The frontend uses live Pyth Hermes price feeds to calculate portfolio value in real-time. However, the on-chain contract does not yet ingest Pyth price accounts to calculate the final leaderboard winners. 
-- **Prize Distribution:** Yield payout logic and tournament phase transitions (Registration -> Active -> Completed) are currently driven by a mocked admin state in the UI.
+- **Kamino DeFi Yield:** The deposit into Kamino yield pools is simulated in the UI for the hackathon demo. Currently, the staked USDC is held securely in the protocol's local vault PDA and is not routed to external protocols.
+- **Pyth Oracle Settlement:** The frontend uses live Pyth Hermes price feeds to calculate and display portfolio value in real-time. However, the on-chain contract does not yet ingest Pyth price accounts to calculate the final leaderboard winners on-chain.
+- **Prize Distribution:** Yield payout logic, dynamic scoring, and settlement are currently driven by a mocked off-chain state. The smart contract acts as an immutable escrow and state machine for entry/exit.
 
 ---
 

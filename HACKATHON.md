@@ -8,9 +8,12 @@
   - AI Sentiment Hedge Fund (Killed - chose #1)
   - Payroll in Equity (Killed - chose #1)
 
-## Phase 2 Plan (Fantasy Wall Street) - STATUS: READY FOR SUBMISSION
-1. **Demo Script:** User connects wallet -> sees prize pool -> Stakes 100 USDC to play -> Receives 100k Fantasy Dollars -> Drafts AAPLx, NVDAx, TSLAx, SPYx using Pyth prices -> Live leaderboard shows portfolio value updating real-time against others -> User unstakes 100 USDC (zero loss). [COMPLETED ✅]
-2. **Scope Cuts:** No real DeFi yield routing for v1 demo (mock yield or simple hold), no mobile UI, no historical charts, no complex auth.
+1. **Demo Script:** User connects wallet -> sees prize pool -> Stakes 5 USDC to play -> Receives 100k Fantasy Dollars -> Drafts AAPLx, NVDAx, TSLAx, SPYx using Pyth prices -> Live leaderboard shows portfolio value updating real-time against others -> User unstakes 5 USDC (zero loss). [COMPLETED ✅]
+2. **Scope Cuts:** 
+   - No real DeFi yield routing for v1 demo (mock yield or simple hold in vault PDA).
+   - Pyth is used in the frontend for live pricing, but NOT ingested by the Anchor contract.
+   - Leaderboard and Settlement are administered off-chain / simulated in UI for the demo.
+   - No mobile UI, no historical charts, no complex auth.
 3. **Money Shot:** The Live Leaderboard ticking in real-time based on Pyth stock prices. [COMPLETED ✅]
 4. **Timebox Progress:**
    - [x] Day 1-2: Anchor Smart Contract (`program/programs/program/src/lib.rs` - `initialize_user`, `stake`, `unstake`, `update_portfolio`)

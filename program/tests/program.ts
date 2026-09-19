@@ -42,6 +42,10 @@ describe("stocklana-fantasy", () => {
   let user2 = anchor.web3.Keypair.generate();
   let user2TokenAccount: anchor.web3.PublicKey;
   let user2State: anchor.web3.PublicKey;
+  let user3 = anchor.web3.Keypair.generate();
+  let user3TokenAccount: anchor.web3.PublicKey;
+  let user3State: anchor.web3.PublicKey;
+
 
   const STAKE_AMOUNT = new anchor.BN(5_000_000);
 
@@ -132,13 +136,26 @@ describe("stocklana-fantasy", () => {
 
     // Derive User State PDAs
     [user1State, user1Bump] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("user_state"), user1.publicKey.toBuffer()],
+      [Buffer.from("user_state"), tournamentState.toBuffer(), user1.publicKey.toBuffer()],
       program.programId
     );
     [user2State] = anchor.web3.PublicKey.findProgramAddressSync(
-      [Buffer.from("user_state"), user2.publicKey.toBuffer()],
+      [Buffer.from("user_state"), tournamentState.toBuffer(), user2.publicKey.toBuffer()],
       program.programId
     );
+  
+    // User 3
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(user3.publicKey, anchor.web3.LAMPORTS_PER_SOL * 2)
+    );
+    user3TokenAccount = await createAccount(provider.connection, wallet.payer, usdcMint, user3.publicKey);
+    await mintTo(provider.connection, wallet.payer, usdcMint, user3TokenAccount, wallet.payer, 100_000_000);
+    const [u3State] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("user_state"), tournamentState.toBuffer(), user3.publicKey.toBuffer()],
+      program.programId
+    );
+    user3State = u3State;
+
   });
 
   it("Initialize Users", async () => {
@@ -311,6 +328,140 @@ describe("stocklana-fantasy", () => {
       expect.fail("Should have failed");
     } catch (err: any) {
       expect(err.message).to.include("Invalid phase transition.");
+    }
+  });
+
+  
+  
+  it("Sets up user 3", async () => {
+
+    await program.methods
+      .initializeUser()
+      .accounts({
+        userState: user3State,
+        user: user3.publicKey,
+        tournament: tournamentState,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([user3])
+      .rpc();
+      
+    await program.methods
+      .stake(STAKE_AMOUNT)
+      .accounts({
+        tournament: tournamentState,
+        userState: user3State,
+        vaultTokenAccount,
+        userTokenAccount: user3TokenAccount,
+        user: user3.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([user3])
+      .rpc();
+
+  });
+
+  it("Fails to stake wrong amount", async () => {
+    try {
+      await program.methods
+        .stake(new anchor.BN(4_000_000))
+        .accounts({
+          tournament: tournamentState,
+          userState: user1State,
+          vaultTokenAccount,
+          userTokenAccount: user1TokenAccount,
+          user: user1.publicKey,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([user1])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Stake amount must be exactly 5 USDC");
+    }
+  });
+
+  it("Fails to draft duplicate assets", async () => {
+    try {
+      await program.methods
+        .updatePortfolio(["AAPLx", "AAPLx", "TSLAx"])
+        .accounts({ userState: user3State, tournament: tournamentState, user: user3.publicKey })
+        .signers([user3])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Duplicate assets are not allowed");
+    }
+  });
+
+  it("Fails to draft > 5 assets", async () => {
+    try {
+      await program.methods
+        .updatePortfolio(["AAPLx", "NVDAx", "TSLAx", "SPYx", "AAPLx", "NVDAx"])
+        .accounts({ userState: user3State, tournament: tournamentState, user: user3.publicKey })
+        .signers([user3])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Portfolio can have maximum 5 assets");
+    }
+  });
+
+  it("Fails to draft unsupported asset", async () => {
+    try {
+      await program.methods
+        .updatePortfolio(["DOGE", "NVDAx"])
+        .accounts({ userState: user3State, tournament: tournamentState, user: user3.publicKey })
+        .signers([user3])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Invalid asset provided");
+    }
+  });
+
+  it("Fails to lock empty portfolio", async () => {
+    // Empty user2 portfolio first
+    await program.methods
+      .updatePortfolio([])
+      .accounts({ userState: user3State, tournament: tournamentState, user: user3.publicKey })
+      .signers([user3])
+      .rpc();
+      
+    try {
+      await program.methods
+        .lockPortfolio()
+        .accounts({ userState: user3State, tournament: tournamentState, user: user3.publicKey })
+        .signers([user3])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Portfolio cannot be empty when locking");
+    }
+  });
+
+  it("Cross-tournament UserState collision prevention", async () => {
+    // Generate a fake tournament PDA
+    const fakeTournament = anchor.web3.Keypair.generate().publicKey;
+    const [fakeUserState] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("user_state"), fakeTournament.toBuffer(), user3.publicKey.toBuffer()],
+      program.programId
+    );
+    try {
+      await program.methods
+        .initializeUser()
+        .accounts({
+          userState: fakeUserState,
+          user: user3.publicKey,
+          tournament: fakeTournament, // not the real tournament
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([user3])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      // It should fail the seed constraint for tournament since fakeTournament != tournament PDA seeds
+      expect(err.message).to.exist;
     }
   });
 

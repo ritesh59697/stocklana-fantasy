@@ -219,12 +219,17 @@ pub struct InitializeUser<'info> {
         init, 
         payer = user, 
         space = 8 + 32 + 8 + (4 + (5 * 10)) + 1 + 1 + 1, // added is_locked bool and has_entered bool
-        seeds = [b"user_state", user.key().as_ref()], 
+        seeds = [b"user_state", tournament.key().as_ref(), user.key().as_ref()], 
         bump
     )]
     pub user_state: Account<'info, UserState>,
     #[account(mut)]
     pub user: Signer<'info>,
+    #[account(
+        seeds = [b"tournament"],
+        bump = tournament.bump,
+    )]
+    pub tournament: Account<'info, TournamentState>,
     pub system_program: Program<'info, System>,
 }
 
@@ -238,7 +243,7 @@ pub struct Stake<'info> {
     pub tournament: Account<'info, TournamentState>,
     #[account(
         mut,
-        seeds = [b"user_state", user.key().as_ref()],
+        seeds = [b"user_state", tournament.key().as_ref(), user.key().as_ref()],
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,
@@ -265,7 +270,7 @@ pub struct Unstake<'info> {
     pub tournament: Account<'info, TournamentState>,
     #[account(
         mut,
-        seeds = [b"user_state", user.key().as_ref()],
+        seeds = [b"user_state", tournament.key().as_ref(), user.key().as_ref()],
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,
@@ -286,7 +291,7 @@ pub struct Unstake<'info> {
 pub struct UpdatePortfolio<'info> {
     #[account(
         mut,
-        seeds = [b"user_state", user.key().as_ref()],
+        seeds = [b"user_state", tournament.key().as_ref(), user.key().as_ref()],
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,
@@ -302,7 +307,7 @@ pub struct UpdatePortfolio<'info> {
 pub struct LockPortfolio<'info> {
     #[account(
         mut,
-        seeds = [b"user_state", user.key().as_ref()],
+        seeds = [b"user_state", tournament.key().as_ref(), user.key().as_ref()],
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,

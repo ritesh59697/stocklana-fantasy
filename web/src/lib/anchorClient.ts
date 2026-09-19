@@ -26,9 +26,9 @@ export function getTournamentStatePda(): PublicKey {
   return pda;
 }
 
-export function getUserStatePda(userPubkey: PublicKey): PublicKey {
+export function getUserStatePda(userPubkey: PublicKey, tournamentStatePda: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("user_state"), userPubkey.toBuffer()],
+    [Buffer.from("user_state"), tournamentStatePda.toBuffer(), userPubkey.toBuffer()],
     PROGRAM_ID
   );
   return pda;
@@ -55,9 +55,9 @@ export async function buildStakeTransaction(
   stocks?: string[]
 ): Promise<Transaction> {
   const userPubkey = wallet.publicKey;
-  const userStatePda = getUserStatePda(userPubkey);
-  const vaultTokenPda = getVaultTokenPda();
   const tournamentStatePda = getTournamentStatePda();
+  const userStatePda = getUserStatePda(userPubkey, tournamentStatePda);
+  const vaultTokenPda = getVaultTokenPda();
   const userAta = getAssociatedTokenAddressSync(DEVNET_USDC_MINT, userPubkey);
   
   const program = getProgram(connection);
@@ -130,10 +130,9 @@ export async function buildUpdateAndLockPortfolioTransaction(
   stocks: string[]
 ): Promise<Transaction> {
   const userPubkey = wallet.publicKey;
-  const userStatePda = getUserStatePda(userPubkey);
-  const program = getProgram(connection);
-
   const tournamentStatePda = getTournamentStatePda();
+  const userStatePda = getUserStatePda(userPubkey, tournamentStatePda);
+  const program = getProgram(connection);
 
   const tx = new Transaction();
   
@@ -165,10 +164,9 @@ export async function buildLockPortfolioTransaction(
   wallet: any
 ): Promise<Transaction> {
   const userPubkey = wallet.publicKey;
-  const userStatePda = getUserStatePda(userPubkey);
-  const program = getProgram(connection);
-
   const tournamentStatePda = getTournamentStatePda();
+  const userStatePda = getUserStatePda(userPubkey, tournamentStatePda);
+  const program = getProgram(connection);
 
   const tx = new Transaction();
   
@@ -192,9 +190,9 @@ export async function buildUnstakeTransaction(
   wallet: any
 ): Promise<Transaction> {
   const userPubkey = wallet.publicKey;
-  const userStatePda = getUserStatePda(userPubkey);
-  const vaultTokenPda = getVaultTokenPda();
   const tournamentStatePda = getTournamentStatePda();
+  const userStatePda = getUserStatePda(userPubkey, tournamentStatePda);
+  const vaultTokenPda = getVaultTokenPda();
   const userAta = getAssociatedTokenAddressSync(DEVNET_USDC_MINT, userPubkey);
   
   const program = getProgram(connection);
@@ -224,7 +222,8 @@ export async function fetchUserState(
 ): Promise<{ hasStaked: boolean, isLocked: boolean, portfolio: string[], hasEntered: boolean } | null> {
   if (!wallet.publicKey) return null;
   const program = getProgram(connection);
-  const userStatePda = getUserStatePda(wallet.publicKey);
+  const tournamentStatePda = getTournamentStatePda();
+  const userStatePda = getUserStatePda(wallet.publicKey, tournamentStatePda);
   
   try {
     const state = await (program.account as any).userState.fetch(userStatePda);
