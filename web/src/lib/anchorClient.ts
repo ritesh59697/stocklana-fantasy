@@ -91,9 +91,10 @@ export async function buildStakeTransaction(
   // 2. Check if user_state account exists
   const userStateInfo = await connection.getAccountInfo(userStatePda);
   if (!userStateInfo) {
-    const initUserIx = await program.methods.initializeUser().accounts({
+    const initUserIx = await (program.methods as any).initializeUser().accounts({
       userState: userStatePda,
       user: userPubkey,
+      tournament: tournamentStatePda,
       systemProgram: SystemProgram.programId,
     }).instruction();
     tx.add(initUserIx);

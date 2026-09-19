@@ -90,6 +90,10 @@
               },
               {
                 "kind": "account",
+                "path": "tournament"
+              },
+              {
+                "kind": "account",
                 "path": "user"
               }
             ]
@@ -99,6 +103,28 @@
           "name": "user",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "tournament",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -134,17 +160,44 @@
                   108,
                   116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "tournament"
               }
             ]
           }
         },
         {
-          "name": "usdc_mint"
+          "name": "usdc_mint",
+          "address": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
         },
         {
           "name": "authority",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "tournament",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
@@ -196,7 +249,33 @@
               },
               {
                 "kind": "account",
+                "path": "tournament"
+              },
+              {
+                "kind": "account",
                 "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tournament",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
               }
             ]
           }
@@ -266,6 +345,10 @@
               },
               {
                 "kind": "account",
+                "path": "tournament"
+              },
+              {
+                "kind": "account",
                 "path": "user"
               }
             ]
@@ -285,6 +368,10 @@
                   108,
                   116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "tournament"
               }
             ]
           }
@@ -368,6 +455,10 @@
               },
               {
                 "kind": "account",
+                "path": "tournament"
+              },
+              {
+                "kind": "account",
                 "path": "user"
               }
             ]
@@ -387,6 +478,10 @@
                   108,
                   116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "tournament"
               }
             ]
           }
@@ -406,6 +501,58 @@
         }
       ],
       "args": []
+    },
+    {
+      "name": "update_game_phase",
+      "discriminator": [
+        112,
+        155,
+        229,
+        232,
+        128,
+        249,
+        148,
+        222
+      ],
+      "accounts": [
+        {
+          "name": "tournament",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_phase",
+          "type": {
+            "defined": {
+              "name": "GamePhase"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "update_portfolio",
@@ -442,7 +589,33 @@
               },
               {
                 "kind": "account",
+                "path": "tournament"
+              },
+              {
+                "kind": "account",
                 "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tournament",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  111,
+                  117,
+                  114,
+                  110,
+                  97,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
               }
             ]
           }
@@ -545,6 +718,31 @@
       "code": 6010,
       "name": "MathOverflow",
       "msg": "Mathematical overflow occurred."
+    },
+    {
+      "code": 6011,
+      "name": "AlreadyEntered",
+      "msg": "User has already entered and unstaked. Re-entry is forbidden."
+    },
+    {
+      "code": 6012,
+      "name": "Unauthorized",
+      "msg": "Unauthorized action."
+    },
+    {
+      "code": 6013,
+      "name": "CannotUnstakeWhileLocked",
+      "msg": "Cannot unstake while portfolio is locked in an active tournament."
+    },
+    {
+      "code": 6014,
+      "name": "InvalidPhaseTransition",
+      "msg": "Invalid phase transition."
+    },
+    {
+      "code": 6015,
+      "name": "DraftingClosed",
+      "msg": "Drafting phase is closed."
     }
   ],
   "types": [
@@ -573,6 +771,10 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
           {
             "name": "phase",
             "type": {
@@ -613,6 +815,10 @@
           },
           {
             "name": "is_locked",
+            "type": "bool"
+          },
+          {
+            "name": "has_entered",
             "type": "bool"
           },
           {
