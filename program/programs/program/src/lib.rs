@@ -5,6 +5,7 @@ declare_id!("hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway");
 
 pub const STAKE_AMOUNT: u64 = 5_000_000; // 5 USDC (6 decimals)
 pub const MAX_PORTFOLIO_SIZE: usize = 5;
+pub const USDC_MINT: Pubkey = pubkey!("44EBxuQYpphzxoe2pCRSBWYHP1rZJMNRDveEz3eHNXSt");
 
 #[program]
 pub mod stocklana_fantasy {
@@ -12,9 +13,16 @@ pub mod stocklana_fantasy {
 
     pub fn initialize_tournament(ctx: Context<InitializeTournament>) -> Result<()> {
         let tournament = &mut ctx.accounts.tournament;
+        tournament.authority = ctx.accounts.authority.key();
         tournament.phase = GamePhase::Registration;
         tournament.total_staked = 0;
         tournament.bump = ctx.bumps.tournament;
+        Ok(())
+    }
+
+    pub fn update_game_phase(ctx: Context<UpdateGamePhase>, new_phase: GamePhase) -> Result<()> {
+        require!(ctx.accounts.tournament.authority == ctx.accounts.authority.key(), ErrorCode::Unauthorized);
+        ctx.accounts.tournament.phase = new_phase;
         Ok(())
     }
 
@@ -24,6 +32,7 @@ pub mod stocklana_fantasy {
         user_state.staked_amount = 0;
         user_state.portfolio = Vec::new();
         user_state.is_locked = false;
+        user_state.has_entered = false;
         user_state.bump = ctx.bumps.user_state;
         Ok(())
     }
@@ -34,6 +43,7 @@ pub mod stocklana_fantasy {
         
         let user_state = &mut ctx.accounts.user_state;
         require!(user_state.staked_amount == 0, ErrorCode::AlreadyStaked);
+        require!(!user_state.has_entered, ErrorCode::AlreadyEntered);
         
         let cpi_accounts = Transfer {
             from: ctx.accounts.user_token_account.to_account_info(),
@@ -45,6 +55,7 @@ pub mod stocklana_fantasy {
         token::transfer(cpi_ctx, amount)?;
 
         user_state.staked_amount = STAKE_AMOUNT;
+        user_state.has_entered = true;
         
         let tournament = &mut ctx.accounts.tournament;
         tournament.total_staked = tournament.total_staked.checked_add(STAKE_AMOUNT).ok_or(ErrorCode::MathOverflow)?;
@@ -57,12 +68,17 @@ pub mod stocklana_fantasy {
         let amount = user_state.staked_amount;
         require!(amount > 0, ErrorCode::NotStaked);
         
-        // Cannot withdraw if the game is settled? The prompt asks to ensure 
-        // withdrawals don't break accounting rules. For now, allowing zero-loss
-        // exit anytime is part of the "zero-loss" claim. 
+        let tournament = &mut ctx.accounts.tournament;
+        if user_state.is_locked {
+            require!(
+                tournament.phase == GamePhase::Finished || tournament.phase == GamePhase::Settled, 
+                ErrorCode::CannotUnstakeWhileLocked
+            );
+        }
 
+        let tournament_key = tournament.key();
         let vault_bump = ctx.bumps.vault_token_account;
-        let auth_seeds = &["vault".as_bytes(), &[vault_bump]];
+        let auth_seeds = &["vault".as_bytes(), tournament_key.as_ref(), &[vault_bump]];
         let signer = &[&auth_seeds[..]];
 
         let cpi_accounts = Transfer {
@@ -76,7 +92,6 @@ pub mod stocklana_fantasy {
 
         user_state.staked_amount = 0;
         
-        let tournament = &mut ctx.accounts.tournament;
         tournament.total_staked = tournament.total_staked.checked_sub(amount).ok_or(ErrorCode::MathOverflow)?;
 
         Ok(())
@@ -126,6 +141,7 @@ pub enum GamePhase {
 
 #[account]
 pub struct TournamentState {
+    pub authority: Pubkey,
     pub phase: GamePhase,
     pub total_staked: u64,
     pub bump: u8,
@@ -137,6 +153,7 @@ pub struct UserState {
     pub staked_amount: u64,
     pub portfolio: Vec<String>,
     pub is_locked: bool,
+    pub has_entered: bool,
     pub bump: u8,
 }
 
@@ -145,7 +162,7 @@ pub struct InitializeTournament<'info> {
     #[account(
         init,
         payer = authority,
-        space = 8 + 1 + 8 + 1, // discriminator + enum + u64 + u8
+        space = 8 + 32 + 1 + 8 + 1, // discriminator + pubkey + enum + u64 + u8
         seeds = [b"tournament"],
         bump
     )]
@@ -156,19 +173,29 @@ pub struct InitializeTournament<'info> {
 }
 
 #[derive(Accounts)]
+pub struct UpdateGamePhase<'info> {
+    #[account(mut, seeds = [b"tournament"], bump = tournament.bump)]
+    pub tournament: Account<'info, TournamentState>,
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
 pub struct InitializeVault<'info> {
     #[account(
         init,
         payer = authority,
-        seeds = [b"vault"],
+        seeds = [b"vault", tournament.key().as_ref()],
         bump,
         token::mint = usdc_mint,
         token::authority = vault_token_account,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
+    #[account(address = USDC_MINT)]
     pub usdc_mint: Account<'info, Mint>,
     #[account(mut)]
     pub authority: Signer<'info>,
+    #[account(seeds = [b"tournament"], bump = tournament.bump)]
+    pub tournament: Account<'info, TournamentState>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -179,7 +206,7 @@ pub struct InitializeUser<'info> {
     #[account(
         init, 
         payer = user, 
-        space = 8 + 32 + 8 + (4 + (5 * 10)) + 1 + 1, // added is_locked bool
+        space = 8 + 32 + 8 + (4 + (5 * 10)) + 1 + 1 + 1, // added is_locked bool and has_entered bool
         seeds = [b"user_state", user.key().as_ref()], 
         bump
     )]
@@ -205,11 +232,11 @@ pub struct Stake<'info> {
     pub user_state: Account<'info, UserState>,
     #[account(
         mut,
-        seeds = [b"vault"],
+        seeds = [b"vault", tournament.key().as_ref()],
         bump,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, token::mint = vault_token_account.mint, token::authority = user)]
     pub user_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user: Signer<'info>,
@@ -232,11 +259,11 @@ pub struct Unstake<'info> {
     pub user_state: Account<'info, UserState>,
     #[account(
         mut,
-        seeds = [b"vault"],
+        seeds = [b"vault", tournament.key().as_ref()],
         bump,
     )]
     pub vault_token_account: Account<'info, TokenAccount>,
-    #[account(mut)]
+    #[account(mut, token::mint = vault_token_account.mint, token::authority = user)]
     pub user_token_account: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user: Signer<'info>,
@@ -289,4 +316,10 @@ pub enum ErrorCode {
     EmptyPortfolio,
     #[msg("Mathematical overflow occurred.")]
     MathOverflow,
+    #[msg("User has already entered and unstaked. Re-entry is forbidden.")]
+    AlreadyEntered,
+    #[msg("Unauthorized action.")]
+    Unauthorized,
+    #[msg("Cannot unstake while portfolio is locked in an active tournament.")]
+    CannotUnstakeWhileLocked,
 }

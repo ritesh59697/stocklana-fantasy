@@ -35,8 +35,9 @@ export function getUserStatePda(userPubkey: PublicKey): PublicKey {
 }
 
 export function getVaultTokenPda(): PublicKey {
+  const tournamentStatePda = getTournamentStatePda();
   const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("vault")],
+    [Buffer.from("vault"), tournamentStatePda.toBuffer()],
     PROGRAM_ID
   );
   return pda;
@@ -211,7 +212,7 @@ export async function buildUnstakeTransaction(
 export async function fetchUserState(
   connection: Connection,
   wallet: any
-): Promise<{ hasStaked: boolean, isLocked: boolean, portfolio: string[] } | null> {
+): Promise<{ hasStaked: boolean, isLocked: boolean, portfolio: string[], hasEntered: boolean } | null> {
   if (!wallet.publicKey) return null;
   const program = getProgram(connection);
   const userStatePda = getUserStatePda(wallet.publicKey);
@@ -222,6 +223,7 @@ export async function fetchUserState(
       hasStaked: (state.stakedAmount as anchor.BN).toNumber() > 0,
       isLocked: state.isLocked,
       portfolio: state.portfolio,
+      hasEntered: state.hasEntered,
     };
   } catch (e) {
     return null;
