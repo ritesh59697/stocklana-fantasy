@@ -103,12 +103,14 @@ export async function buildStakeTransaction(
     const safeStocks = stocks.slice(0, 5);
     const updateIx = await program.methods.updatePortfolio(safeStocks).accounts({
       userState: userStatePda,
+      tournament: tournamentStatePda,
       user: userPubkey,
     }).instruction();
     tx.add(updateIx);
     
     const lockIx = await program.methods.lockPortfolio().accounts({
       userState: userStatePda,
+      tournament: tournamentStatePda,
       user: userPubkey,
     }).instruction();
     tx.add(lockIx);
@@ -131,17 +133,21 @@ export async function buildUpdateAndLockPortfolioTransaction(
   const userStatePda = getUserStatePda(userPubkey);
   const program = getProgram(connection);
 
+  const tournamentStatePda = getTournamentStatePda();
+
   const tx = new Transaction();
   
   const safeStocks = stocks.slice(0, 5);
   const updateIx = await program.methods.updatePortfolio(safeStocks).accounts({
     userState: userStatePda,
+    tournament: tournamentStatePda,
     user: userPubkey,
   }).instruction();
   tx.add(updateIx);
 
   const lockIx = await program.methods.lockPortfolio().accounts({
     userState: userStatePda,
+    tournament: tournamentStatePda,
     user: userPubkey,
   }).instruction();
   tx.add(lockIx);
@@ -162,10 +168,13 @@ export async function buildLockPortfolioTransaction(
   const userStatePda = getUserStatePda(userPubkey);
   const program = getProgram(connection);
 
+  const tournamentStatePda = getTournamentStatePda();
+
   const tx = new Transaction();
   
   const lockIx = await program.methods.lockPortfolio().accounts({
     userState: userStatePda,
+    tournament: tournamentStatePda,
     user: userPubkey,
   }).instruction();
   tx.add(lockIx);

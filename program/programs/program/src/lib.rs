@@ -21,8 +21,17 @@ pub mod stocklana_fantasy {
     }
 
     pub fn update_game_phase(ctx: Context<UpdateGamePhase>, new_phase: GamePhase) -> Result<()> {
-        require!(ctx.accounts.tournament.authority == ctx.accounts.authority.key(), ErrorCode::Unauthorized);
-        ctx.accounts.tournament.phase = new_phase;
+        let tournament = &mut ctx.accounts.tournament;
+        require!(tournament.authority == ctx.accounts.authority.key(), ErrorCode::Unauthorized);
+        
+        match (tournament.phase.clone(), new_phase.clone()) {
+            (GamePhase::Registration, GamePhase::Locked) => {}
+            (GamePhase::Locked, GamePhase::Finished) => {}
+            (GamePhase::Finished, GamePhase::Settled) => {}
+            _ => return err!(ErrorCode::InvalidPhaseTransition),
+        }
+
+        tournament.phase = new_phase;
         Ok(())
     }
 
@@ -98,6 +107,7 @@ pub mod stocklana_fantasy {
     }
 
     pub fn update_portfolio(ctx: Context<UpdatePortfolio>, new_portfolio: Vec<String>) -> Result<()> {
+        require!(ctx.accounts.tournament.phase == GamePhase::Registration, ErrorCode::DraftingClosed);
         let user_state = &mut ctx.accounts.user_state;
         require!(user_state.staked_amount > 0, ErrorCode::NotStaked);
         require!(!user_state.is_locked, ErrorCode::PortfolioLocked);
@@ -117,6 +127,7 @@ pub mod stocklana_fantasy {
     }
 
     pub fn lock_portfolio(ctx: Context<LockPortfolio>) -> Result<()> {
+        require!(ctx.accounts.tournament.phase == GamePhase::Registration, ErrorCode::DraftingClosed);
         let user_state = &mut ctx.accounts.user_state;
         require!(user_state.staked_amount > 0, ErrorCode::NotStaked);
         require!(!user_state.is_locked, ErrorCode::PortfolioLocked);
@@ -126,7 +137,8 @@ pub mod stocklana_fantasy {
         Ok(())
     }
 
-    pub fn initialize_vault(_ctx: Context<InitializeVault>) -> Result<()> {
+    pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
+        require!(ctx.accounts.tournament.authority == ctx.accounts.authority.key(), ErrorCode::Unauthorized);
         Ok(())
     }
 }
@@ -278,6 +290,11 @@ pub struct UpdatePortfolio<'info> {
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,
+    #[account(
+        seeds = [b"tournament"],
+        bump = tournament.bump,
+    )]
+    pub tournament: Account<'info, TournamentState>,
     pub user: Signer<'info>,
 }
 
@@ -289,6 +306,11 @@ pub struct LockPortfolio<'info> {
         bump = user_state.bump,
     )]
     pub user_state: Account<'info, UserState>,
+    #[account(
+        seeds = [b"tournament"],
+        bump = tournament.bump,
+    )]
+    pub tournament: Account<'info, TournamentState>,
     pub user: Signer<'info>,
 }
 
@@ -322,4 +344,8 @@ pub enum ErrorCode {
     Unauthorized,
     #[msg("Cannot unstake while portfolio is locked in an active tournament.")]
     CannotUnstakeWhileLocked,
+    #[msg("Invalid phase transition.")]
+    InvalidPhaseTransition,
+    #[msg("Drafting phase is closed.")]
+    DraftingClosed,
 }

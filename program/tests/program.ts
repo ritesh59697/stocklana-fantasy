@@ -86,7 +86,29 @@ describe("stocklana-fantasy", () => {
       })
       .rpc();
 
-    // Initialize Vault
+    // Test Unauthorized Vault Initialization
+    try {
+      await program.methods
+        .initializeVault()
+        .accounts({
+          vaultTokenAccount,
+          usdcMint,
+          authority: user1.publicKey,
+          tournament: tournamentState,
+          systemProgram: anchor.web3.SystemProgram.programId,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+        })
+        .signers([user1])
+        .rpc();
+      throw new Error("Should have failed");
+    } catch (err: any) {
+      if (!err.message.includes("Unauthorized action")) {
+        throw err;
+      }
+    }
+
+    // Initialize Vault (Authorized)
     await program.methods
       .initializeVault()
       .accounts({
@@ -243,13 +265,13 @@ describe("stocklana-fantasy", () => {
 
     await program.methods
       .updatePortfolio(["AAPLx", "NVDAx", "TSLAx", "SPYx"])
-      .accounts({ userState: user2State, user: user2.publicKey })
+      .accounts({ userState: user2State, tournament: tournamentState, user: user2.publicKey })
       .signers([user2])
       .rpc();
 
     await program.methods
       .lockPortfolio()
-      .accounts({ userState: user2State, user: user2.publicKey })
+      .accounts({ userState: user2State, tournament: tournamentState, user: user2.publicKey })
       .signers([user2])
       .rpc();
 
@@ -273,6 +295,25 @@ describe("stocklana-fantasy", () => {
     }
   });
 
+  it("Passes unauthorized vault initialization check (run in before block)", async () => {
+    // Asserted in the before block
+  });
+
+  it("Fails invalid phase transition (Registration -> Finished)", async () => {
+    try {
+      await program.methods
+        .updateGamePhase({ finished: {} })
+        .accounts({
+          tournament: tournamentState,
+          authority: wallet.publicKey,
+        })
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Invalid phase transition.");
+    }
+  });
+
   it("Authority transitions to Locked Phase", async () => {
     await program.methods
       .updateGamePhase({ locked: {} })
@@ -284,6 +325,34 @@ describe("stocklana-fantasy", () => {
 
     const state = await program.account.tournamentState.fetch(tournamentState);
     expect(Object.keys(state.phase)[0]).to.equal("locked");
+  });
+
+  it("Fails backwards phase transition (Locked -> Registration)", async () => {
+    try {
+      await program.methods
+        .updateGamePhase({ registration: {} })
+        .accounts({
+          tournament: tournamentState,
+          authority: wallet.publicKey,
+        })
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Invalid phase transition.");
+    }
+  });
+
+  it("Fails portfolio update after tournament lock (DraftingClosed)", async () => {
+    try {
+      await program.methods
+        .updatePortfolio(["AAPLx"])
+        .accounts({ userState: user2State, tournament: tournamentState, user: user2.publicKey })
+        .signers([user2])
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Drafting phase is closed.");
+    }
   });
 
   it("Locked user fails to unstake during Locked Phase", async () => {
@@ -332,5 +401,33 @@ describe("stocklana-fantasy", () => {
 
     const state = await program.account.userState.fetch(user2State);
     expect(state.stakedAmount.toNumber()).to.equal(0);
+  });
+
+  it("Authority transitions to Settled Phase", async () => {
+    await program.methods
+      .updateGamePhase({ settled: {} })
+      .accounts({
+        tournament: tournamentState,
+        authority: wallet.publicKey,
+      })
+      .rpc();
+      
+    const state = await program.account.tournamentState.fetch(tournamentState);
+    expect(Object.keys(state.phase)[0]).to.equal("settled");
+  });
+
+  it("Settled phase is terminal (Fails to transition out of Settled)", async () => {
+    try {
+      await program.methods
+        .updateGamePhase({ registration: {} })
+        .accounts({
+          tournament: tournamentState,
+          authority: wallet.publicKey,
+        })
+        .rpc();
+      expect.fail("Should have failed");
+    } catch (err: any) {
+      expect(err.message).to.include("Invalid phase transition.");
+    }
   });
 });
