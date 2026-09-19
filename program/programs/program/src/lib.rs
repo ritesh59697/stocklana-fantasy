@@ -5,6 +5,14 @@ declare_id!("hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway");
 
 pub const STAKE_AMOUNT: u64 = 5_000_000; // 5 USDC (6 decimals)
 pub const MAX_PORTFOLIO_SIZE: usize = 5;
+
+#[cfg(feature = "mainnet")]
+pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+
+#[cfg(feature = "devnet")]
+pub const USDC_MINT: Pubkey = pubkey!("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+
+#[cfg(not(any(feature = "mainnet", feature = "devnet")))]
 pub const USDC_MINT: Pubkey = pubkey!("44EBxuQYpphzxoe2pCRSBWYHP1rZJMNRDveEz3eHNXSt");
 
 #[program]

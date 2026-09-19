@@ -98,10 +98,19 @@ The smart contract is live and fully verified on **Solana Devnet**:
 
 ### Program Instructions (Rust / Anchor):
 1. `initialize_vault`: Creates the protocol's PDA-governed USDC token vault.
-2. `initialize_user`: Derives PDA `[b"user_state", user_pubkey]` to initialize player account.
+2. `initialize_user`: Derives PDA `[b"user_state", tournament_pubkey, user_pubkey]` for tournament isolation.
 3. `stake`: Transfers 5 USDC collateral from player ATA to vault PDA.
 4. `update_portfolio`: Records up to 5 drafted stock allocations on-chain with validation.
-5. `unstake`: Returns 100% of user collateral with zero loss using vault bump PDA signer seeds.
+5. `lock_portfolio`: Closes portfolio drafting and locks user into tournament.
+6. `unstake`: Returns 100% of user collateral with zero loss using vault bump PDA signer seeds.
+
+### ⚙️ Multi-Environment USDC Mint Configuration
+The Anchor smart contract enforces canonical USDC mints per environment using Cargo feature flags:
+- **Localnet / Test Suite** (Default): `44EBxuQYpphzxoe2pCRSBWYHP1rZJMNRDveEz3eHNXSt` (local offline test keypair)
+- **Solana Devnet**: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` (official Circle Devnet USDC)
+  - *Build Command*: `anchor build -- --features devnet`
+- **Solana Mainnet**: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` (canonical Solana USDC)
+  - *Build Command*: `anchor build -- --features mainnet`
 
 ---
 

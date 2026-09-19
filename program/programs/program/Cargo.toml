@@ -9,7 +9,10 @@ crate-type = ["cdylib", "lib"]
 name = "program"
 
 [features]
-default = []
+default = ["localnet"]
+localnet = []
+devnet = []
+mainnet = []
 cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []

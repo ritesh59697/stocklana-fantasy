@@ -24,6 +24,34 @@ const WalletMultiButton = dynamic(
   { ssr: false }
 );
 
+const STORAGE_PREFIX = "stocklana_fantasy_portfolio_";
+
+function saveLocalPositions(pubkey: string, alloc: Record<string, number>, cash: number) {
+  try {
+    localStorage.setItem(
+      `${STORAGE_PREFIX}${pubkey}`,
+      JSON.stringify({ alloc, cash, savedAt: Date.now() })
+    );
+  } catch (e) {
+    console.warn("Could not save positions to local storage", e);
+  }
+}
+
+function getLocalPositions(pubkey: string): { alloc: Record<string, number>; cash: number } | null {
+  try {
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}${pubkey}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearLocalPositions(pubkey: string) {
+  try {
+    localStorage.removeItem(`${STORAGE_PREFIX}${pubkey}`);
+  } catch (e) {}
+}
+
 export default function Home() {
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -60,13 +88,38 @@ export default function Home() {
           setHasStaked(state.hasStaked);
           setIsLocked(state.isLocked);
           if (state.portfolio && state.portfolio.length > 0) {
-            // Restore a simple 1-share portfolio to satisfy the UI check
-            const restoredPort: Record<string, number> = {};
-            state.portfolio.forEach(sym => {
-              restoredPort[sym] = 1;
-            });
-            setPortfolio(restoredPort);
-            setUserCash(0);
+            const saved = getLocalPositions(wallet.publicKey.toBase58());
+            // Verify if saved positions match on-chain tickers
+            const onChainTickers = new Set(state.portfolio);
+            const savedTickers = saved?.alloc ? Object.keys(saved.alloc).filter(sym => (saved.alloc[sym] || 0) > 0) : [];
+            const hasExactMatch = savedTickers.length > 0 && savedTickers.every(sym => onChainTickers.has(sym));
+
+            if (hasExactMatch && saved) {
+              setPortfolio(saved.alloc);
+              setUserCash(saved.cash);
+            } else {
+              // Deterministic fallback equal split for verified on-chain assets:
+              // Splits $100,000 purchasing power evenly across the drafted tickers
+              const equalBudgetPerAsset = Math.floor(100000 / state.portfolio.length);
+              const baselinePrices: Record<string, number> = {
+                AAPLx: 227.40,
+                NVDAx: 119.20,
+                TSLAx: 221.80,
+                SPYx: 564.90,
+              };
+              const deterministicAlloc: Record<string, number> = {};
+              let spent = 0;
+              state.portfolio.forEach(sym => {
+                const price = baselinePrices[sym] || 200;
+                const shares = Math.floor(equalBudgetPerAsset / price);
+                deterministicAlloc[sym] = shares;
+                spent += shares * price;
+              });
+              const remCash = Math.max(0, 100000 - spent);
+              setPortfolio(deterministicAlloc);
+              setUserCash(remCash);
+              saveLocalPositions(wallet.publicKey.toBase58(), deterministicAlloc, remCash);
+            }
           }
         }
       }
@@ -108,6 +161,9 @@ export default function Home() {
         setPortfolio(alloc);
         setUserCash(remainingCash ?? 100000);
         setIsLocked(true);
+        if (wallet.publicKey) {
+          saveLocalPositions(wallet.publicKey.toBase58(), alloc, remainingCash ?? 100000);
+        }
         setTxHash(signature);
         setShowReceipt(true);
       }
@@ -155,6 +211,9 @@ export default function Home() {
       setPortfolio(alloc);
       setUserCash(remainingCash);
       setIsLocked(true);
+      if (wallet.publicKey) {
+        saveLocalPositions(wallet.publicKey.toBase58(), alloc, remainingCash);
+      }
       setTxHash(signature);
       setShowReceipt(true);
       setToastMessage(null);
@@ -188,6 +247,10 @@ export default function Home() {
       const tx = await buildUnstakeTransaction(connection, wallet);
       const signature = await wallet.sendTransaction(tx, connection);
       await connection.confirmTransaction(signature, "confirmed");
+
+      if (wallet.publicKey) {
+        clearLocalPositions(wallet.publicKey.toBase58());
+      }
 
       setHasStaked(false);
       setIsLocked(false);

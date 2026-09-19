@@ -48,8 +48,10 @@ export const FEED_ID_TO_SYMBOL = Object.fromEntries(
   Object.entries(STOCKS).map(([k, v]) => [v, k])
 );
 
-// Fallback baseline stock prices in case Pyth Hermes requires auth/rate-limited
-const BASELINE_PRICES: Record<string, number> = {
+export type PythFeedStatus = "live" | "unavailable" | "simulation";
+
+// Reference baseline stock prices used only if network is offline
+export const REFERENCE_BASELINE_PRICES: Record<string, number> = {
   AAPLx: 227.40,
   NVDAx: 119.20,
   TSLAx: 221.80,
@@ -57,9 +59,11 @@ const BASELINE_PRICES: Record<string, number> = {
 };
 
 export function usePythPrices() {
-  const [prices, setPrices] = useState<Record<string, number>>(BASELINE_PRICES);
+  const [prices, setPrices] = useState<Record<string, number>>(REFERENCE_BASELINE_PRICES);
   const [loading, setLoading] = useState(false);
-  const [isSimulated, setIsSimulated] = useState(false);
+  const [status, setStatus] = useState<PythFeedStatus>("unavailable");
+  const [error, setError] = useState<string | null>(null);
+  const [simulationEnabled, setSimulationEnabled] = useState(false);
 
   useEffect(() => {
     const connection = new HermesClient("https://hermes.pyth.network", {});
@@ -84,38 +88,54 @@ export function usePythPrices() {
           }
           if (Object.keys(newPrices).length > 0) {
             setPrices(newPrices);
-            setIsSimulated(false);
+            setStatus("live");
+            setError(null);
             setLoading(false);
             return;
           }
         }
-      } catch (err) {
-        // Pyth public Hermes endpoint returned 401 or network error
-        // Graceful fallback to real-time simulated price ticks so the demo is 100% interactive
+        throw new Error("Empty price feed response");
+      } catch (err: any) {
         if (!active) return;
-        setIsSimulated(true);
-        setPrices(prev => {
-          const updated: Record<string, number> = {};
-          for (const [sym, basePrice] of Object.entries(prev)) {
-            // Realistic micro fluctuation (-0.15% to +0.15%)
-            const delta = (Math.random() - 0.49) * 0.003 * basePrice;
-            updated[sym] = Math.round((basePrice + delta) * 100) / 100;
-          }
-          return updated;
-        });
         setLoading(false);
+
+        // If explicitly requested by user in demo simulation mode, simulate with labeled status
+        if (simulationEnabled) {
+          setStatus("simulation");
+          setError(null);
+          setPrices(prev => {
+            const updated: Record<string, number> = {};
+            for (const [sym, basePrice] of Object.entries(prev)) {
+              const delta = (Math.random() - 0.49) * 0.003 * basePrice;
+              updated[sym] = Math.round((basePrice + delta) * 100) / 100;
+            }
+            return updated;
+          });
+        } else {
+          // Honest failure state - never silently fake prices
+          setStatus("unavailable");
+          setError(err?.message || "Pyth Hermes network feed unreachable");
+        }
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 2500); // Live price tick every 2.5s
+    const interval = setInterval(fetchPrices, 3000); // 3-second polling for live feeds
 
     return () => {
       active = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [simulationEnabled]);
 
-  return { prices, loading, isSimulated };
+  return { 
+    prices, 
+    loading, 
+    status, 
+    error,
+    isSimulated: status === "simulation",
+    simulationEnabled,
+    setSimulationEnabled,
+  };
 }
 

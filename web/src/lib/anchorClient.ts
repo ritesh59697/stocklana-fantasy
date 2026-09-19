@@ -14,7 +14,19 @@ import { Program } from "@coral-xyz/anchor";
 import IDL from "./stocklana_fantasy.json";
 
 export const PROGRAM_ID = new PublicKey("hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway");
-export const DEVNET_USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
+
+// Environment-specific USDC mints
+export const USDC_MINTS = {
+  localnet: new PublicKey("44EBxuQYpphzxoe2pCRSBWYHP1rZJMNRDveEz3eHNXSt"), // Local test mint
+  devnet: new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"),   // Circle Devnet USDC
+  mainnet: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),  // Canonical Mainnet USDC
+} as const;
+
+export const ACTIVE_NETWORK = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as keyof typeof USDC_MINTS) || "devnet";
+export const ACTIVE_USDC_MINT = USDC_MINTS[ACTIVE_NETWORK];
+// Backward-compatible alias
+export const DEVNET_USDC_MINT = ACTIVE_USDC_MINT;
+
 export const STAKE_AMOUNT_USDC = 5; // 5 USDC
 export const STAKE_RAW_AMOUNT = new anchor.BN(STAKE_AMOUNT_USDC * 1_000_000); // 5,000,000
 

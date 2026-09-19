@@ -146,6 +146,12 @@ export default function PortfolioLockedCard({
             ${cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
+
+        {/* Persistence & On-chain status transparency note */}
+        <div className="flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-gray-500 gap-2 px-1">
+          <span>Positions saved in client state</span>
+          <span>On-Chain Verified: {Object.keys(portfolio).filter(k => (portfolio[k] || 0) > 0).join(", ") || "Active"}</span>
+        </div>
       </div>
 
       {/* Actions */}
