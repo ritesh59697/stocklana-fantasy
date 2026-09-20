@@ -150,29 +150,29 @@ export default function PortfolioChart({
   const strokeColor = isPositive ? "#10b981" : "#ef4444"; // emerald or rose
 
   return (
-    <div className="w-full flex flex-col mb-6 bg-white/[0.015] border border-white/[0.06] rounded-xl p-4 sm:p-5 relative group">
+    <div className="w-full flex flex-col mb-6 bg-zinc-50/80 dark:bg-white/[0.015] border border-zinc-200 dark:border-white/[0.06] rounded-xl p-4 sm:p-5 relative group transition-colors">
       {/* Chart Sub-Header & Timeframe Controls */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">
+          <span className="text-[11px] font-mono text-zinc-500 dark:text-gray-500 uppercase tracking-wider">
             Performance Curve
           </span>
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.04] text-[10px] font-mono text-gray-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-white/[0.04] text-[10px] font-mono text-zinc-600 dark:text-gray-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             Pyth Stream
           </span>
         </div>
 
         {/* Timeframe Selectors */}
-        <div className="flex items-center gap-1 bg-white/[0.03] border border-white/[0.06] p-0.5 rounded-lg">
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06] p-0.5 rounded-lg">
           {(["LIVE", "1H", "24H", "7D"] as Timeframe[]).map((tf) => (
             <button
               key={tf}
               onClick={() => setTimeframe(tf)}
               className={`px-2.5 py-1 text-[10px] font-mono rounded-md transition-colors cursor-pointer ${
                 timeframe === tf
-                  ? "bg-white text-black font-semibold shadow-sm"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-zinc-900 text-white dark:bg-white dark:text-black font-semibold shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-900 dark:text-gray-400 dark:hover:text-white"
               }`}
             >
               {tf}
@@ -204,7 +204,8 @@ export default function PortfolioChart({
             y1={height * 0.25}
             x2={width}
             y2={height * 0.25}
-            stroke="rgba(255,255,255,0.03)"
+            stroke="currentColor"
+            className="text-zinc-200 dark:text-white/[0.03]"
             strokeDasharray="4 4"
           />
           <line
@@ -212,7 +213,8 @@ export default function PortfolioChart({
             y1={height * 0.75}
             x2={width}
             y2={height * 0.75}
-            stroke="rgba(255,255,255,0.03)"
+            stroke="currentColor"
+            className="text-zinc-200 dark:text-white/[0.03]"
             strokeDasharray="4 4"
           />
 
@@ -245,7 +247,8 @@ export default function PortfolioChart({
                 y1={0}
                 x2={activePoint.x}
                 y2={height}
-                stroke="rgba(255,255,255,0.35)"
+                stroke="currentColor"
+                className="text-zinc-400 dark:text-white/35"
                 strokeWidth="1"
                 strokeDasharray="3 3"
               />
@@ -265,18 +268,18 @@ export default function PortfolioChart({
         {/* Hover Floating Tooltip */}
         {activePoint && (
           <div
-            className="absolute -top-3 pointer-events-none transform -translate-x-1/2 -translate-y-full bg-[#16161a] border border-white/[0.15] px-2.5 py-1 rounded-md text-[11px] font-mono shadow-xl text-white flex items-center gap-2 whitespace-nowrap z-20"
+            className="absolute -top-3 pointer-events-none transform -translate-x-1/2 -translate-y-full bg-white dark:bg-[#16161a] border border-zinc-200 dark:border-white/[0.15] px-2.5 py-1 rounded-md text-[11px] font-mono shadow-xl text-zinc-900 dark:text-white flex items-center gap-2 whitespace-nowrap z-20"
             style={{
               left: `${(activePoint.x / width) * 100}%`,
             }}
           >
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-zinc-900 dark:text-white">
               ${activePoint.point.value.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </span>
-            <span className="text-gray-400 text-[10px]">
+            <span className="text-zinc-400 dark:text-gray-400 text-[10px]">
               {new Date(activePoint.point.timestamp).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -288,9 +291,9 @@ export default function PortfolioChart({
       </div>
 
       {/* Axis Footer */}
-      <div className="flex justify-between items-center text-[10px] font-mono text-gray-500 mt-2">
+      <div className="flex justify-between items-center text-[10px] font-mono text-zinc-400 dark:text-gray-500 mt-2">
         <span>Low: ${minVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-        <span className="text-gray-600">Updated every 1s</span>
+        <span className="text-zinc-400 dark:text-gray-600">Updated every 1s</span>
         <span>High: ${maxVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
       </div>
     </div>

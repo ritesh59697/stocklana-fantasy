@@ -1,0 +1,456 @@
+"use client";
+
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import dynamic from "next/dynamic";
+import { useState, useEffect } from "react";
+import DraftArena from "@/components/DraftArena";
+import Leaderboard from "@/components/Leaderboard";
+import PortfolioLockedCard from "@/components/PortfolioLockedCard";
+import ReceiptModal from "@/components/ReceiptModal";
+import HowItWorksModal from "@/components/HowItWorksModal";
+import KaminoTelemetryModal from "@/components/KaminoTelemetryModal";
+import StocklanaLogo from "@/components/StocklanaLogo";
+import RoundCountdownBadge from "@/components/RoundCountdown";
+import { 
+  buildStakeTransaction, 
+  buildUpdateAndLockPortfolioTransaction, 
+  buildUnstakeTransaction, 
+  fetchUserState,
+  STAKE_AMOUNT_USDC 
+} from "@/lib/anchorClient";
+
+const WalletMultiButton = dynamic(
+  () => import("@solana/wallet-adapter-react-ui").then((mod) => mod.WalletMultiButton),
+  { ssr: false }
+);
+
+const STORAGE_PREFIX = "stocklana_fantasy_portfolio_";
+
+function saveLocalPositions(pubkey: string, alloc: Record<string, number>, cash: number) {
+  try {
+    localStorage.setItem(
+      `${STORAGE_PREFIX}${pubkey}`,
+      JSON.stringify({ alloc, cash, savedAt: Date.now() })
+    );
+  } catch (e) {
+    console.warn("Could not save positions to local storage", e);
+  }
+}
+
+function getLocalPositions(pubkey: string): { alloc: Record<string, number>; cash: number } | null {
+  try {
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}${pubkey}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearLocalPositions(pubkey: string) {
+  try {
+    localStorage.removeItem(`${STORAGE_PREFIX}${pubkey}`);
+  } catch (e) {}
+}
+
+import ThemeToggle from "@/components/ThemeToggle";
+
+interface TournamentDashboardProps {
+  onBackToLanding?: () => void;
+}
+
+export default function TournamentDashboard({ onBackToLanding }: TournamentDashboardProps) {
+  const { connection } = useConnection();
+  const wallet = useWallet();
+  const { connected: walletConnected } = wallet;
+  const [hasStaked, setHasStaked] = useState(false);
+  const [mockConnected, setMockConnected] = useState(false);
+  
+  // E2E Test Mock Override (Client-side only to prevent hydration mismatch)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search.includes('mockWallet=true')) {
+      setMockConnected(true);
+    }
+  }, []);
+  
+  const connected = walletConnected || mockConnected;
+  
+  const [isLocked, setIsLocked] = useState(false);
+  const [portfolio, setPortfolio] = useState<Record<string, number>>({});
+  const [draftPortfolio, setDraftPortfolio] = useState<Record<string, number>>({});
+  const [userCash, setUserCash] = useState(100000);
+  const [draftCash, setDraftCash] = useState(100000);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showKaminoTelemetry, setShowKaminoTelemetry] = useState(false);
+  const [txHash, setTxHash] = useState("");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isStaking, setIsStaking] = useState(false);
+
+  useEffect(() => {
+    async function loadUserState() {
+      if (walletConnected && wallet.publicKey && connection) {
+        const state = await fetchUserState(connection, wallet);
+        if (state) {
+          setHasStaked(state.hasStaked);
+          setIsLocked(state.isLocked);
+          if (state.portfolio && state.portfolio.length > 0) {
+            const saved = getLocalPositions(wallet.publicKey.toBase58());
+            // Verify if saved positions match on-chain tickers
+            const onChainTickers = new Set(state.portfolio);
+            const savedTickers = saved?.alloc ? Object.keys(saved.alloc).filter(sym => (saved.alloc[sym] || 0) > 0) : [];
+            const hasExactMatch = savedTickers.length > 0 && savedTickers.every(sym => onChainTickers.has(sym));
+
+            if (hasExactMatch && saved) {
+              setPortfolio(saved.alloc);
+              setUserCash(saved.cash);
+            } else {
+              // Deterministic fallback equal split for verified on-chain assets:
+              // Splits $100,000 purchasing power evenly across the drafted tickers
+              const equalBudgetPerAsset = Math.floor(100000 / state.portfolio.length);
+              const baselinePrices: Record<string, number> = {
+                AAPLx: 227.40,
+                NVDAx: 119.20,
+                TSLAx: 221.80,
+                SPYx: 564.90,
+              };
+              const deterministicAlloc: Record<string, number> = {};
+              let spent = 0;
+              state.portfolio.forEach(sym => {
+                const price = baselinePrices[sym] || 200;
+                const shares = Math.floor(equalBudgetPerAsset / price);
+                deterministicAlloc[sym] = shares;
+                spent += shares * price;
+              });
+              const remCash = Math.max(0, 100000 - spent);
+              setPortfolio(deterministicAlloc);
+              setUserCash(remCash);
+              saveLocalPositions(wallet.publicKey.toBase58(), deterministicAlloc, remCash);
+            }
+          }
+        }
+      }
+    }
+    loadUserState();
+  }, [walletConnected, wallet.publicKey, connection]);
+
+  const handleStake = async (alloc?: Record<string, number>, remainingCash?: number) => {
+    const draftedStocks = alloc 
+      ? Object.entries(alloc).filter(([_, shares]) => shares > 0).map(([sym]) => sym)
+      : [];
+
+    if (mockConnected || !wallet.publicKey) {
+      setHasStaked(true);
+      if (alloc) {
+        setPortfolio(alloc);
+        setUserCash(remainingCash ?? 100000);
+        setIsLocked(true);
+        const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+        const randomSig = "5" + Array.from({ length: 86 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+        setTxHash(randomSig);
+        setShowReceipt(true);
+      }
+      setToastMessage(`Successfully staked ${STAKE_AMOUNT_USDC} USDC into Kamino DeFi yield pool! $100,000 Fantasy Dollars credited.`);
+      setTimeout(() => setToastMessage(null), 5000);
+      return;
+    }
+
+    try {
+      setIsStaking(true);
+      setToastMessage("Preparing atomic stake & draft transaction on Solana Devnet...");
+      const tx = await buildStakeTransaction(connection, wallet, draftedStocks);
+      const signature = await wallet.sendTransaction(tx, connection);
+      setToastMessage(`Transaction submitted! Confirming on Devnet: ${signature.slice(0, 8)}...`);
+      await connection.confirmTransaction(signature, "confirmed");
+      
+      setHasStaked(true);
+      if (alloc) {
+        setPortfolio(alloc);
+        setUserCash(remainingCash ?? 100000);
+        setIsLocked(true);
+        if (wallet.publicKey) {
+          saveLocalPositions(wallet.publicKey.toBase58(), alloc, remainingCash ?? 100000);
+        }
+        setTxHash(signature);
+        setShowReceipt(true);
+      }
+      setToastMessage(`Successfully staked ${STAKE_AMOUNT_USDC} USDC & locked draft on-chain! Tx: ${signature.slice(0, 8)}...`);
+      setTimeout(() => setToastMessage(null), 6000);
+    } catch (err: any) {
+      console.error("Stake error:", err);
+      const msg = err?.message || String(err);
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else if (msg.includes("0x1") || msg.includes("insufficient funds") || msg.includes("AccountNotFound")) {
+        setToastMessage("Need Devnet USDC! Grab 10 free USDC at faucet.circle.com (select Solana Devnet).");
+      } else {
+        setToastMessage(`Transaction failed: ${msg.slice(0, 80)}`);
+      }
+      setTimeout(() => setToastMessage(null), 6000);
+    } finally {
+      setIsStaking(false);
+    }
+  };
+
+  const handleDraftComplete = async (alloc: Record<string, number>, remainingCash: number) => {
+    const draftedStocks = Object.entries(alloc)
+      .filter(([_, shares]) => shares > 0)
+      .map(([sym]) => sym);
+
+    if (mockConnected || !wallet.publicKey) {
+      setPortfolio(alloc);
+      setUserCash(remainingCash);
+      setIsLocked(true);
+      const chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+      const randomSig = "5" + Array.from({ length: 86 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      setTxHash(randomSig);
+      setShowReceipt(true);
+      return;
+    }
+
+    try {
+      setToastMessage("Signing and broadcasting portfolio to Solana Devnet...");
+      const tx = await buildUpdateAndLockPortfolioTransaction(connection, wallet, draftedStocks);
+      const signature = await wallet.sendTransaction(tx, connection);
+      setToastMessage(`Transaction submitted! Confirming on Devnet: ${signature.slice(0, 8)}...`);
+      await connection.confirmTransaction(signature, "confirmed");
+      
+      setPortfolio(alloc);
+      setUserCash(remainingCash);
+      setIsLocked(true);
+      if (wallet.publicKey) {
+        saveLocalPositions(wallet.publicKey.toBase58(), alloc, remainingCash);
+      }
+      setTxHash(signature);
+      setShowReceipt(true);
+      setToastMessage(null);
+    } catch (err: any) {
+      console.error("Draft update error:", err);
+      const msg = err?.message || String(err);
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else {
+        setToastMessage(`Transaction failed: ${msg.slice(0, 90)}`);
+      }
+      setTimeout(() => setToastMessage(null), 6000);
+    }
+  };
+
+  const handleUnstake = async () => {
+    if (mockConnected || !wallet.publicKey) {
+      setHasStaked(false);
+      setIsLocked(false);
+      setPortfolio({});
+      setDraftPortfolio({});
+      setUserCash(100000);
+      setDraftCash(100000);
+      setToastMessage(`Zero-loss verified! ${STAKE_AMOUNT_USDC}.00 USDC has been refunded to your wallet.`);
+      setTimeout(() => setToastMessage(null), 6000);
+      return;
+    }
+
+    try {
+      setToastMessage("Processing zero-loss unstake on Solana Devnet...");
+      const tx = await buildUnstakeTransaction(connection, wallet);
+      const signature = await wallet.sendTransaction(tx, connection);
+      await connection.confirmTransaction(signature, "confirmed");
+
+      if (wallet.publicKey) {
+        clearLocalPositions(wallet.publicKey.toBase58());
+      }
+
+      setHasStaked(false);
+      setIsLocked(false);
+      setPortfolio({});
+      setDraftPortfolio({});
+      setUserCash(100000);
+      setDraftCash(100000);
+      setToastMessage(`Zero-loss verified! ${STAKE_AMOUNT_USDC}.00 USDC refunded to your wallet. Tx: ${signature.slice(0, 8)}...`);
+      setTimeout(() => setToastMessage(null), 6000);
+    } catch (err: any) {
+      console.error("Unstake error:", err);
+      const msg = err?.message || String(err);
+      if (msg.includes("User rejected") || msg.includes("rejected the request")) {
+        setToastMessage("Transaction cancelled in wallet.");
+      } else {
+        setToastMessage(`Unstake notice: ${msg.slice(0, 90)}`);
+      }
+      setTimeout(() => setToastMessage(null), 6000);
+    }
+  };
+
+  return (
+    <main className="flex min-h-screen flex-col bg-[#fafafa] dark:bg-[#0a0a0a] text-zinc-900 dark:text-white selection:bg-zinc-200 dark:selection:bg-white/30 font-sans transition-colors duration-200">
+      {/* Top Protocol Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-white/[0.08] bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6 max-w-[1400px] mx-auto w-full">
+          <div className="flex items-center gap-3 sm:gap-6">
+            {onBackToLanding && (
+              <button
+                onClick={onBackToLanding}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-zinc-100 dark:bg-white/[0.04] hover:bg-zinc-200 dark:hover:bg-white/[0.08] border border-zinc-300 dark:border-white/[0.08] text-xs font-mono text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+                title="Return to Landing Page"
+                aria-label="Return to Overview"
+              >
+                <span>←</span>
+                <span className="hidden sm:inline">Overview</span>
+              </button>
+            )}
+
+            <div 
+              onClick={onBackToLanding}
+              className={`flex items-center gap-3 ${onBackToLanding ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+            >
+              <StocklanaLogo size={32} />
+              <h1 className="text-lg font-medium tracking-tight text-zinc-900 dark:text-white">
+                Stocklana Fantasy
+              </h1>
+            </div>
+
+            {/* Live Pool Pill with Kamino Telemetry Trigger */}
+            <button
+              onClick={() => setShowKaminoTelemetry(true)}
+              className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.03] hover:bg-zinc-200 dark:hover:bg-white/[0.07] border border-zinc-300 dark:border-white/[0.08] transition-colors cursor-pointer group"
+              title="Click to view Kamino Yield Telemetry"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-medium text-zinc-800 dark:text-white tracking-wide">Prize Pool: $1,450.00 USDC</span>
+              <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity">↗</span>
+            </button>
+
+            {/* Zero Loss Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-white/[0.03] border border-zinc-300 dark:border-white/[0.08] text-[11px] font-mono text-zinc-600 dark:text-gray-400">
+              <span className="text-zinc-900 dark:text-white">Zero-Loss</span>
+              <span className="text-zinc-400 dark:text-gray-600">•</span>
+              <span>100% Capital Preserved</span>
+            </div>
+
+            {/* Round Countdown Badge */}
+            <RoundCountdownBadge className="hidden xl:inline-flex" />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowHowItWorks(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-transparent hover:bg-zinc-100 dark:hover:bg-white/[0.05] text-xs font-medium text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              How It Works
+            </button>
+
+            {hasStaked && (
+              <button
+                onClick={handleUnstake}
+                className="hidden sm:inline-flex items-center text-xs font-medium px-3 py-2 rounded-lg text-zinc-600 dark:text-gray-400 hover:bg-zinc-100 dark:hover:bg-white/[0.05] hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Unstake
+              </button>
+            )}
+
+            <ThemeToggle />
+
+            <WalletMultiButton className="!rounded-lg !h-9 !px-4 !text-xs !whitespace-nowrap" />
+          </div>
+        </div>
+      </header>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="sticky top-16 z-40 w-full bg-white text-black px-6 py-2.5 text-center text-xs sm:text-sm font-medium animate-in fade-in">
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Action Cockpit Dashboard */}
+      <div className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+        {/* Left Column: Action Area (Draft Arena or Locked Portfolio) */}
+        <div className="lg:col-span-7 flex flex-col gap-6 relative z-10">
+          {isLocked ? (
+            <PortfolioLockedCard
+              portfolio={portfolio}
+              cash={userCash}
+              onEditDraft={() => setIsLocked(false)}
+              onUnstake={handleUnstake}
+            />
+          ) : (
+            <DraftArena
+              connected={connected}
+              hasStaked={hasStaked}
+              isStaking={isStaking}
+              onStake={handleStake}
+              onComplete={handleDraftComplete}
+              onDraftChange={(alloc, rem) => {
+                setDraftPortfolio(alloc);
+                setDraftCash(rem);
+              }}
+              onOpenKaminoTelemetry={() => setShowKaminoTelemetry(true)}
+            />
+          )}
+        </div>
+
+        {/* Right Column: Live Leaderboard */}
+        <div className="lg:col-span-5 relative z-10 flex flex-col h-full">
+          <Leaderboard 
+            userPortfolio={isLocked ? portfolio : draftPortfolio} 
+            userCash={isLocked ? userCash : draftCash} 
+            isLocked={isLocked}
+          />
+        </div>
+      </div>
+
+      {/* Celebration / Confirmation Modal */}
+      <ReceiptModal
+        isOpen={showReceipt}
+        onClose={() => setShowReceipt(false)}
+        portfolio={portfolio}
+        totalValue={100000}
+        txHash={txHash}
+      />
+
+      {/* How It Works & Architecture Modal */}
+      <HowItWorksModal
+        isOpen={showHowItWorks}
+        onClose={() => setShowHowItWorks(false)}
+        onStartDrafting={() => {
+          if (!hasStaked && connected) {
+            handleStake();
+          }
+        }}
+      />
+
+      {/* Kamino Yield Vault Telemetry Modal */}
+      <KaminoTelemetryModal
+        isOpen={showKaminoTelemetry}
+        onClose={() => setShowKaminoTelemetry(false)}
+      />
+
+      {/* Protocol Architecture & Judge Telemetry Footer */}
+      <footer className="w-full border-t border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0a0a0a] py-6 px-4 sm:px-6 relative z-10 mt-auto transition-colors">
+        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 dark:text-gray-500">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 sm:gap-4">
+            <span>Powered by</span>
+            <span className="flex items-center gap-1.5 text-zinc-900 dark:text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-white animate-pulse" />
+              Pyth Oracles
+            </span>
+            <span className="text-zinc-300 dark:text-gray-700 hidden sm:inline">•</span>
+            <span className="text-zinc-900 dark:text-white">Token-2022</span>
+            <span className="text-zinc-300 dark:text-gray-700 hidden sm:inline">•</span>
+            <span className="text-zinc-900 dark:text-white">Kamino DeFi</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span>Devnet Program:</span>
+            <a
+              href="https://explorer.solana.com/address/hGenhdu1tQPYJCvKF1XnemEV83eo1gQvp7LgcmRcway?cluster=devnet"
+              target="_blank"
+              rel="noreferrer"
+              className="text-zinc-900 dark:text-white hover:text-zinc-600 dark:hover:text-gray-300 transition-colors flex items-center gap-1"
+            >
+              <span>hGen...way</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+    </main>
+  );
+}

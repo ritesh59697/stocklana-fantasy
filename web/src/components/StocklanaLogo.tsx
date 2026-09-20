@@ -11,7 +11,7 @@ interface StocklanaLogoProps {
 /**
  * Bespoke Stocklana Fantasy Brandmark
  * Combines Solana's iconic speed chevrons with an ascending stock market "S" monogram.
- * Pure vector SVG, zero-slop, matte obsidian finish with crisp precision geometry.
+ * Pure vector SVG, matte obsidian badge with crisp precision geometry.
  */
 export default function StocklanaLogo({
   size = 32,
@@ -33,8 +33,7 @@ export default function StocklanaLogo({
             width="32"
             height="32"
             rx="8"
-            fill="#111114"
-            stroke="rgba(255, 255, 255, 0.12)"
+            className="fill-zinc-950 dark:fill-[#111114] stroke-zinc-300 dark:stroke-white/[0.12]"
             strokeWidth="1"
           />
         )}
@@ -42,19 +41,19 @@ export default function StocklanaLogo({
         {/* Top Solana-Ascend Speed Chevron: Sweeps right with 45° chamfer */}
         <path
           d="M8.5 12C8.5 9.79086 10.2909 8 12.5 8H21.2C22.25 8 22.95 9.07 22.56 10.04L21.46 12.78C21.21 13.41 20.61 13.82 19.93 13.82H13.5C12.4 13.82 11.5 14.72 11.5 15.82V16H8.5V12Z"
-          fill="#FFFFFF"
+          className={withBadge ? "fill-white" : "fill-zinc-900 dark:fill-white"}
         />
 
         {/* Bottom Solana-Ascend Speed Chevron: Sweeps left with matching parallel chamfer */}
         <path
           d="M23.5 20C23.5 22.2091 21.7091 24 19.5 24H10.8C9.75 24 9.05 22.93 9.44 21.96L10.54 19.22C10.79 18.59 11.39 18.18 12.07 18.18H18.5C19.6 18.18 20.5 17.28 20.5 16.18V16H23.5V20Z"
-          fill="#FFFFFF"
+          className={withBadge ? "fill-white" : "fill-zinc-900 dark:fill-white"}
         />
 
         {/* Central Kinetic Velocity Spark / Market Candlestick Axis */}
         <path
           d="M13.5 16H18.5"
-          stroke="#FFFFFF"
+          className={withBadge ? "stroke-white" : "stroke-zinc-900 dark:stroke-white"}
           strokeWidth="1.5"
           strokeLinecap="round"
         />
